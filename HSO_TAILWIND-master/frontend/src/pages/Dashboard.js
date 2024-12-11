@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPaintBrush, FaExclamationCircle, FaBars, FaChartBar, FaChartLine } from 'react-icons/fa'; 
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -13,34 +14,45 @@ export default function Dashboard() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const [announcements, setAnnouncements] = useState([]); // Initialize as an empty array
+  const [programs, setPrograms] = useState([])
+  const [fetchError, setFetchError] = useState(null);
 
-  const announcements = Array.from({ length: 12 }, (_, index) => ({
-    id: index + 1,
-    text: `Announcement ${index + 1}: Important information to know.`,
-    details: "Details about this announcement. This information is too long to fit on the card.",
-    color: [
-      "text-red-600", 
-      "text-orange-600", 
-      "text-yellow-600", 
-      "text-green-600", 
-      "text-blue-600"
-    ][index % 5], 
-    image: "https://via.placeholder.com/150",
-    date: `0${index + 1}/10/2024`.slice(-10), 
-    time: "08:00 AM"
-  }));
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      const { data, error } = await supabase
+      .from('announcements')
+      .select();
 
-  // Sample data for programs
-  const programs = Array.from({ length: 12 }, (_, index) => ({
-    id: index + 1,
-    title: `Program ${index + 1}`,
-    details: "This is a program description. This information is too long to fit on the card.",
-    date: `0${index + 1}/10/2024`.slice(-10), 
-    time: "09:00 AM",
-    location: "Location " + (index + 1),
-    who: "Organizer " + (index + 1),
-    image: "https://via.placeholder.com/150"
-  }));
+      if(error){
+        setFetchError("Error Fetching");
+        setAnnouncements([]);
+        console.log(error);
+      }
+      if(data){
+        setAnnouncements(data);
+        setFetchError(null);
+      }
+    } 
+
+    const fetchPrograms = async () => {
+      const {data,error} = await supabase
+      .from('programs')
+      .select();
+
+      if(error){
+        setFetchError("Error Fetching");
+        setAnnouncements([]);
+        console.log(error);
+      }
+      if(data){
+        setPrograms(data);
+        setFetchError(null);
+      }
+    }
+    fetchAnnouncements();
+    fetchPrograms();
+  }, []);
 
   const today = new Date(); 
   const todayDate = today.getDate(); 
@@ -52,19 +64,6 @@ export default function Dashboard() {
     }, 10000);
 
     return () => clearInterval(shakeInterval);
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
-        setShowSettingsMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, []);
 
   const handleDateClick = (day) => {
@@ -95,7 +94,7 @@ export default function Dashboard() {
   // Modal state for announcements
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
-  const [modalVisibleProgram, setModalVisibleProgram] = useState(false);
+  const [programsModalVisible, setProgramsModalVisible] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState(null);
 
   const handleShowMoreAnnouncement = (announcement) => {
@@ -103,18 +102,18 @@ export default function Dashboard() {
     setModalVisible(true);
   };
 
-  const handleShowMoreProgram = (program) => {
-    setSelectedProgram(program);
-    setModalVisibleProgram(true);
-  };
-
   const closeAnnouncementModal = () => {
     setModalVisible(false);
     setSelectedAnnouncement(null);
   };
 
+  const handleShowMoreProgram = (program) => {
+    setSelectedProgram(program);
+    setProgramsModalVisible(true);
+  };
+
   const closeProgramModal = () => {
-    setModalVisibleProgram(false);
+    setModalVisible(false);
     setSelectedProgram(null);
   };
 
@@ -136,19 +135,19 @@ export default function Dashboard() {
         filtered = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
         break;
       case 'text-red-600':
-        filtered = filtered.filter(announcement => announcement.color === 'text-red-600');
+        filtered = filtered.filter(announcement => announcement.color === 'red');
         break;
       case 'text-orange-600':
-        filtered = filtered.filter(announcement => announcement.color === 'text-orange-600');
+        filtered = filtered.filter(announcement => announcement.color === 'orange');
         break;
       case 'text-yellow-600':
-        filtered = filtered.filter(announcement => announcement.color === 'text-yellow-600');
+        filtered = filtered.filter(announcement => announcement.color === 'yellow');
         break;
       case 'text-green-600':
-        filtered = filtered.filter(announcement => announcement.color === 'text-green-600');
+        filtered = filtered.filter(announcement => announcement.color === 'green');
         break;
       case 'text-blue-600':
-        filtered = filtered.filter(announcement => announcement.color === 'text-blue-600');
+        filtered = filtered.filter(announcement => announcement.color === 'blue');
         break;
       default:
         break;
@@ -178,15 +177,17 @@ export default function Dashboard() {
   })();
 
   // Search functionality
-  const filteredAnnouncements = sortedAnnouncements.filter(announcement => 
-    announcement.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    announcement.details.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAnnouncements = sortedAnnouncements.filter(announcement => {
+    const text = (announcement.title || "").toLowerCase();  // Ensure it's not undefined
+    const details = (announcement.content || "").toLowerCase();  // Ensure it's not undefined
+    return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
+  });
 
-  const filteredPrograms = sortedPrograms.filter(program => 
-    program.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    program.details.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPrograms = sortedPrograms.filter(program => {
+    const text = (program.title || "").toLowerCase();  // Ensure it's not undefined
+    const details = (program.what || "").toLowerCase();  // Ensure it's not undefined
+    return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
+  });
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
@@ -272,7 +273,7 @@ export default function Dashboard() {
       </aside>
 
       <main className={`flex-1 p-4 md:ml-64 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} overflow-y-auto`}>
-        <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
           <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
             <div className="flex items-center">
               <FaSearch className="w-4 h-4 mr-1 text-white" />
@@ -310,11 +311,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-
           {/* Announcements Card Container */}
           <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
-            <div className="flex justify-between items-center ">
-              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} uppercase`}>ANNOUNCEMENTS</h3>
+            <div className="flex justify-between items-center">
+              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center uppercase`}>ANNOUNCEMENTS</h3>
               <select className="border border-gray-300 rounded p-1" value={filter} onChange={handleSortChange}>
                 <option value="all">All</option>
                 <option value="oldest">Oldest</option>
@@ -326,128 +326,139 @@ export default function Dashboard() {
                 <option value="text-blue-600">Blue</option>
               </select>
             </div>
-            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '300px' }}>
-              {filteredAnnouncements.map((announcement) => (
-                <div 
-                  key={announcement.id} 
-                  className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
-                  style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} // Adjusted width for two columns
-                >
-                  <img src={announcement.image} alt={announcement.text} className="h-24 w-full object-cover mb-2" />
-                  <h4 className={`${announcement.color} font-semibold`}>{announcement.text}</h4>
-                  <p className={`${announcement.color} text-sm`}>{announcement.details.substring(0, 40)}...</p>
-                  <p className="text-gray-500 text-xs">{announcement.date} at {announcement.time}</p>
-                  <button 
-                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
-                    onClick={() => handleShowMoreAnnouncement(announcement)}
+
+            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '350px' }}>
+              {filteredAnnouncements.length === 0 ? (
+                <div className="text-center text-gray-500">No announcements found</div>
+              ) : (
+                filteredAnnouncements.map((announcement) => (
+                  <div 
+                    key={announcement.id} 
+                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
+                    style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
                   >
-                    Show More
+                    <img src={announcement.images} alt={announcement.title} className="h-24 w-full object-cover mb-2" />
+                    <h4 className={`${announcement.color} font-semibold`}>{announcement.title}</h4>
+                    <p className="text-xs">{announcement.content}</p>
+                    <p className="text-gray-500 text-xs">{announcement.created_at} at {announcement.time}</p>
+                    <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
+                    onClick={() => handleShowMoreAnnouncement(announcement)}
+                  >Show More
                   </button>
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Programs Card Container */}
-          <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
+                {/* Programs Card Container */}
+                <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
             <div className="flex justify-between items-center">
               <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center uppercase`}>PROGRAMS</h3>
               {/* Programs Sorting Dropdown */}
-              <select className="border border-gray-300 rounded p-1" value={programFilter} onChange={(e) => setProgramFilter(e.target.value)}>
+              <select className="border border-gray-300 rounded p-1" value={programFilter} onChange={setProgramFilter}>
                 <option value="all">All</option>
                 <option value="oldest">Oldest</option>
                 <option value="newest">Newest</option>
               </select>
             </div>
-            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '300px' }}>
-              {filteredPrograms.map((program) => (
-                <div 
-                  key={program.id} 
-                  className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
-                  style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} // Adjusted width for two columns
-                >
-                  <img src={program.image} alt={program.title} className="h-24 w-full object-cover mb-2" />
-                  <h4 className="font-semibold">{program.title}</h4>
-                  <p className="text-sm">{program.details.substring(0, 40)}...</p>
-                  <p className="text-gray-500 text-xs">When: {program.date} at {program.time}</p>
-                  <p className="text-gray-500 text-xs">Where: {program.location}</p>
-                  <p className="text-gray-500 text-xs">Who: {program.who}</p>
-                  <button 
-                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
-                    onClick={() => handleShowMoreProgram(program)}
+            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '350px' }}>
+            {filteredPrograms.length === 0 ? (
+                <div className="text-center text-gray-500">No programs found</div>
+              ) : (
+                filteredPrograms.map((program) => (
+                  <div 
+                    key={program.id} 
+                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
+                    style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
                   >
-                    Show More
+                  <img src={program.images} alt={program.title} className="h-24 w-full object-cover mb-2" />
+                  <h4 className="font-semibold">{program.title}</h4>
+                  <p className="text-sm">{program.what}</p>
+                  <p className="text-gray-500 text-xs">When: {program.when_date} at {program.when_time}</p>
+                  <p className="text-gray-500 text-xs">Where: {program.where}</p>
+                  <p className="text-gray-500 text-xs">Who: {program.title}</p>
+                    <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
+                    onClick={() => handleShowMoreProgram(program)}
+                  >Show More
                   </button>
-                </div>
-              ))}
+                  </div>
+                ))
+              )}    
             </div>
           </div>
         </div>
+
+        
+
+     
       </main>
-
-      {/* Modal for Announcements */}
-      {modalVisible && selectedAnnouncement && (
+         {/* Announcement Modal */}
+         {modalVisible && selectedAnnouncement && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg p-4 max-w-lg w-full">
-            <h2 className={`text-lg font-bold ${selectedAnnouncement.color}`}>{selectedAnnouncement.text}</h2>
-            <img src={selectedAnnouncement.image} alt={selectedAnnouncement.text} className="h-48 w-full object-cover mb-2" />
-            <p className={`${selectedAnnouncement.color}`}>{selectedAnnouncement.details}</p>
-            <p className="text-gray-500 text-xs">{selectedAnnouncement.date} at {selectedAnnouncement.time}</p>
-            <button className="mt-4 px-4 py-2 bg-maroon text-white rounded" onClick={closeAnnouncementModal}>Close</button>
+        <div className="bg-white rounded-lg p-4 max-w-lg w-full">
+          <h2 className={`text-lg font-bold ${selectedAnnouncement.color}`}>{selectedAnnouncement.text}</h2>
+          <img src={selectedAnnouncement.images} alt={selectedAnnouncement.title} className="h-48 w-full object-cover mb-2" />
+          <p className={`${selectedAnnouncement.color}`}>{selectedAnnouncement.content}</p>
+          <p className="text-gray-500 text-xs">{selectedAnnouncement.created_at}</p>
+          <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
+                    onClick={closeAnnouncementModal}>
+                      Close
+                  </button>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* Modal for Programs */}
-      {modalVisibleProgram && selectedProgram && (
+        )}
+        {/* Modal for Programs */}
+      {programsModalVisible && selectedProgram && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-4 max-w-lg w-full">
             <h2 className={`text-lg font-bold`}>{selectedProgram.title}</h2>
-            <img src={selectedProgram.image} alt={selectedProgram.title} className="h-48 w-full object-cover mb-2" />
+            <img src={selectedProgram.images} alt={selectedProgram.title} className="h-48 w-full object-cover mb-2" />
             <p className="text-black">{selectedProgram.details}</p>
-            <p className="text-gray-500 text-xs">When: {selectedProgram.date} at {selectedProgram.time}</p>
-            <p className="text-gray-500 text-xs">Where: {selectedProgram.location}</p>
-            <p className="text-gray-500 text-xs">Who: {selectedProgram.who}</p>
-            <button className="mt-4 px-4 py-2 bg-maroon text-white rounded" onClick={closeProgramModal}>Close</button>
+            <p className="text-gray-500 text-xs">When: {selectedProgram.when_date} at {selectedProgram.when_time}</p>
+            <p className="text-gray-500 text-xs">Where: {selectedProgram.where}</p>
+            <p className="text-gray-500 text-xs">Who: {selectedProgram.title}</p>
+            <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
+                    onClick={closeProgramModal}>
+                      Close
+                  </button>
           </div>
         </div>
       )}
 
-      <style jsx>{`
-        .animate-shake {
-          animation: shake 0.5s;
-        }
+<style jsx>{`
+    .animate-shake {
+      animation: shake 0.5s;
+    }
 
-        @keyframes shake {
-          0% { transform: translate(1px, 1px) rotate(0deg); }
-          10% { transform: translate(-1px, -2px) rotate(-1deg); }
-          20% { transform: translate(-3px, 0px) rotate(1deg); }
-          30% { transform: translate(3px, 2px) rotate(0deg); }
-          40% { transform: translate(1px, -1px) rotate(1deg); }
-          50% { transform: translate(-1px, 2px) rotate(-1deg); }
-          60% { transform: translate(-3px, 1px) rotate(0deg); }
-          70% { transform: translate(3px, 1px) rotate(-1deg); }
-          80% { transform: translate(-1px, -1px) rotate(1deg); }
-          90% { transform: translate(1px, 2px) rotate(0deg); }
-          100% { transform: translate(1px, -2px) rotate(-1deg); }
-        }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      70% { transform: translate(3px, 1px) rotate(-1deg); }
+      80% { transform: translate(-1px, -1px) rotate(1deg); }
+      90% { transform: translate(1px, 2px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
 
-        @media (max-width: 768px) {
-          .flex-col {
-            flex-direction: column;
-          }
+    @media (max-width: 768px) {
+      .flex-col {
+        flex-direction: column;
+      }
 
-          .flex-wrap {
-            flex-wrap: wrap;
-          }
+      .flex-wrap {
+        flex-wrap: wrap;
+      }
 
-          .overflow-hidden {
-            overflow: hidden;
-          }
-        }
-      `}</style>
+      .overflow-hidden {
+        overflow: hidden;
+      }
+    }
+  `}</style>
     </div>
   );
 }
-
-//
