@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPaintBrush, FaExclamationCircle, FaBars, FaChartBar, FaSort, FaChartLine } from 'react-icons/fa'; 
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 export default function IncidentReport() {
   const navigate = useNavigate();
@@ -19,59 +20,26 @@ export default function IncidentReport() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("All"); // Default is All
 
-  // Sample incident reports with dummy data
-  const [incidentReports, setIncidentReports] = useState([
-    {
-      reportNumber: 1,
-      name: "John Doe",
-      location: "Cafeteria",
-      dateTime: "2024-10-01 14:30",
-      description: "Fire alarm triggered.",
-      image: "https://via.placeholder.com/150",
-      selectedDepartment: "",
-      status: "Open" // Default status
-    },
-    {
-      reportNumber: 2,
-      name: "Jane Smith",
-      location: "Main Hall",
-      dateTime: "2024-10-02 09:00",
-      description: "Medical emergency in cafeteria.",
-      image: "https://via.placeholder.com/150",
-      selectedDepartment: "",
-      status: "Open" // Default status
-    },
-    {
-      reportNumber: 3,
-      name: "Alice Johnson",
-      location: "Room 202",
-      dateTime: "2024-10-03 11:15",
-      description: "Broken window in room 202.",
-      image: "https://via.placeholder.com/150",
-      selectedDepartment: "",
-      status: "Open" // Default status
-    },
-    {
-      reportNumber: 4,
-      name: "Bob Brown",
-      location: "Building Entrance",
-      dateTime: "2024-10-04 15:45",
-      description: "Power outage in building.",
-      image: "https://via.placeholder.com/150",
-      selectedDepartment: "",
-      status: "Open" // Default status
-    },
-    {
-      reportNumber: 5,
-      name: "Charlie Green",
-      location: "Hallway",
-      dateTime: "2024-10-05 10:30",
-      description: "Water leakage in hallway.",
-      image: "https://via.placeholder.com/150",
-      selectedDepartment: "",
-      status: "Open" // Default status
-    },
-  ]);
+  // State for incident reports
+  const [incidentReports, setIncidentReports] = useState([]);
+
+  useEffect(() => {
+    // Fetch incident reports from Supabase
+    const fetchReports = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('incidents')
+          .select('*');
+        
+        if (error) throw error;
+        setIncidentReports(data);
+      } catch (err) {
+        console.error('Error fetching incident reports:', err);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -108,7 +76,7 @@ export default function IncidentReport() {
 
   const handleDepartmentChange = (index, value) => {
     const updatedReports = [...incidentReports];
-    updatedReports[index].selectedDepartment = value; // Update selected department for the specific incident
+    updatedReports[index].selectedDepartment = value;   
     setIncidentReports(updatedReports);
   };
 
@@ -119,18 +87,19 @@ export default function IncidentReport() {
       const updatedReports = [...incidentReports];
       updatedReports[index].status = "Ongoing"; 
       setIncidentReports(updatedReports);
-      alert(`Report ${incidentReports[index].reportNumber} sent to: ${selectedDepartment}`);
+      alert(`Report ${incidentReports[index].id} sent to: ${selectedDepartment}`);
     }
   };
 
-  // Function to filter incident reports based on the search term and selected status
   const filteredReports = incidentReports.filter(report => {
-    const matchesSearchTerm = report.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.description.toLowerCase().includes(searchTerm.toLowerCase());
-
+    // Ensure the fields are not undefined before calling toLowerCase()
+    const matchesSearchTerm =
+      (report.name && report.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (report.location && report.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (report.description && report.description.toLowerCase().includes(searchTerm.toLowerCase()));
+  
     const matchesStatus = selectedStatus === "All" || report.status === selectedStatus;
-
+  
     return matchesSearchTerm && matchesStatus;
   });
 
@@ -232,7 +201,7 @@ export default function IncidentReport() {
                 <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg z-10`} ref={settingsMenuRef}>
                   <ul className="py-2">
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                   </ul>
                 </div>
@@ -255,16 +224,17 @@ export default function IncidentReport() {
               </button>
               {showFilterMenu && (
                 <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-4 z-10`} ref={filterMenuRef}>
-                  <h3 className="text-lg font-semibold">Filter by Status</h3>
+                  <h4 className="text-lg font-semibold text-center">Filter by Status</h4>
+                  <br/>
                   <div className="flex flex-col space-y-2">
                     <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
+                      className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-gray-400 text-white' : 'bg-gray-200'} hover:bg-gray-200`} 
                       onClick={() => handleStatusFilter("All")}
                     >
                       All
                     </button>
                     <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
+                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
                       onClick={() => handleStatusFilter("Open")}
                     >
                       Open
@@ -276,7 +246,7 @@ export default function IncidentReport() {
                       Ongoing
                     </button>
                     <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
+                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-green-400 text-white' : 'bg-gray-200'} hover:bg-green-200`} 
                       onClick={() => handleStatusFilter("Resolved")}
                     >
                       Resolved
@@ -289,7 +259,7 @@ export default function IncidentReport() {
           <div className="overflow-y-scroll flex-grow" style={{ maxHeight: '600px' }}>
             {filteredReports.length > 0 ? (
               filteredReports.map((report, index) => (
-                <div key={report.reportNumber} className={`border border-blue-300 p-4 mb-4 rounded shadow hover:shadow-lg transition-shadow duration-200 flex justify-between items-start ${theme === 'dark' ? 'bg-gray-700' : ''}`}>
+                <div key={report.id} className={`border border-blue-300 p-4 mb-4 rounded shadow hover:shadow-lg transition-shadow duration-200 flex justify-between items-start ${theme === 'dark' ? 'bg-gray-700' : ''}`}>
                   <div className="flex flex-col">
                     <img 
                       src={report.image} 
@@ -297,10 +267,10 @@ export default function IncidentReport() {
                       className="w-20 h-20 object-cover cursor-pointer rounded" 
                       onClick={() => handleImageClick(report.image)} 
                     />
-                    <p className="mt-1 font-semibold text-sm">Report Number: {report.reportNumber}</p>
-                    <p className="text-xs">Name: {report.name}</p>
+                    <p className="mt-1 font-semibold text-sm">Report Number: {report.id}</p>
                     <p className="text-xs">Location: {report.location}</p>
-                    <p className="text-xs">Date & Time: {report.dateTime}</p>
+                    <p className="text-xs">Date: {report.date_observed}</p>
+                    <p className="text-xs">Time: {report.time_observed}</p>
                     <p className="text-xs">Description: {report.description}</p>
                     <p className="mt-1 font-semibold text-xs">Status: {report.status}</p> {/* Display Status */}
                   </div>

@@ -8,7 +8,9 @@ export default function Login() {
   const [otpSent, setOtpSent] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [shake, setShake] = useState(false);
-  const [otp, setOtp] = useState(''); // Add this state to handle OTP input
+  const [otp, setOtp] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -47,13 +49,12 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Send OTP to the user's email
     const { error } = await supabase.auth.signInWithOtp({ email });
 
     if (error) {
       console.error('Error sending OTP:', error.message);
     } else {
-      setOtpSent(true); // Notify the user that OTP has been sent
+      setOtpSent(true);
     }
   };
 
@@ -65,29 +66,40 @@ export default function Login() {
         token: otp,
         type: 'email',
       });
+  
       if (error) {
         console.error('Error verifying OTP:', error.message);
         return;
       }
-      navigate('/dashboard'); // Redirect after successful login
+  
+      const { data, error: userError } = await supabase
+        .from('Account')
+        .select('user_type')
+        .eq('email', email)
+        .single(); 
+  
+      if (userError) {
+        console.error('Error fetching user data:', userError.message);
+        return;
+      }
+  
+      if (data.user_type !== 'Admin') {
+        setErrorMessage('Unauthorized access: Only Admins are allowed.');
+        return; 
+      }
+  
+      setErrorMessage(''); 
+      navigate('/dashboard'); 
     } catch (error) {
       console.error('OTP verification failed:', error.message);
     }
   };
-
-  const handleEmailSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) {
-        console.error('Error sending OTP:', error.message);
-        return;
-      }
-      setOtpSent(true); // After OTP is sent, show OTP input field
-    } catch (error) {
-      console.error('OTP sending failed:', error.message);
-    }
+  
+  const goBack = () => {
+    setOtpSent(false);  
+    setErrorMessage(''); 
   };
+  
 
   const navLinkStyle = (isActive) => ({
     color: isActive ? 'gold' : 'maroon',
@@ -212,6 +224,12 @@ export default function Login() {
         <div className="w-full md:w-2/5 bg-white flex flex-col justify-center items-center p-10">
           <h2 className="text-2xl text-maroon font-bold mb-8 shadow-text">Welcome Back, <span className="text-yellow-500">ADMIN!</span></h2>
 
+          {errorMessage && (
+            <div className="w-full max-w-sm p-4 mb-4 text-red-500 bg-red-100 rounded-md">
+              <strong>{errorMessage}</strong>
+              </div>
+            )}
+
           {!otpSent ? (
             <form className="w-full max-w-sm" onSubmit={handleLogin}>
               <input
@@ -247,8 +265,19 @@ export default function Login() {
                   Submit OTP
                 </button>
               </form>
-            </div>
+                        {/* Show the "Back" button if there is an error message */}
+          {errorMessage && (
+            <button
+              onClick={goBack}
+              className="w-full mt-4 bg-red-500 text-white p-3 rounded-md hover:bg-red-400"
+            >
+              Back to Email Entry
+            </button>
           )}
+            </div>
+            
+          )}
+
         </div>
       </div>
     </div>

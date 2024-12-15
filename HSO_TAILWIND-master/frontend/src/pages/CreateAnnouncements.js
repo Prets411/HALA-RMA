@@ -36,8 +36,13 @@ export default function CreateAnnouncements() {
 
   const handleImageChange = (event) => {
     const files = Array.from(event.target.files);
-    setImages((prevImages) => [...prevImages, ...files]);
+    const validImages = files.filter(file => file.size <= 5 * 1024 * 1024 && file.type.startsWith('image/')); // Check size and type
+    if (validImages.length < files.length) {
+      alert('Some files are invalid (either too large or not images).');
+    }
+    setImages(prevImages => [...prevImages, ...validImages]);
   };
+  
 
   const handleAnnouncementChange = (event) => {
     setAnnouncement(event.target.value);
@@ -81,43 +86,43 @@ export default function CreateAnnouncements() {
       // Check for any errors in retrieving user data
       if (response.error) {
         console.error('Authentication error:', response.error.message);
-        return { error: response.error }; // Return error object
+        return { error: response.error }; 
       }
   
-      const user = response.data?.user; // Safely access the user object
+      const user = response.data?.user;
   
-      // If no user is authenticated, show an error
+     
       if (!user) {
         console.error('User not authenticated.');
-        return { error: { message: 'User not authenticated.' } }; // Return error object
+        return { error: { message: 'User not authenticated.' } }; 
       }
   
-      // Proceed with posting the announcement (assuming you have the necessary data)
+     
       const { data: announcementData, error: insertError } = await supabase
         .from('announcements')
         .insert([
           {
             title: announcementTitle,
             content: announcement,
-            created_by: user.id, // Assuming the column name is `created_by`
+            created_by: user.id, 
             color: selectedColor,
-            images: images.map((image) => image.name), // Adjust if you're storing image paths or URLs
+            images: images.map((image) => image.name), 
             created_at: new Date().toISOString(),
           },
         ]);
-  
-      // Handle insert error
+
+    
       if (insertError) {
         console.error('Error posting announcement:', insertError.message);
-        return { error: insertError }; // Return error object
+        return { error: insertError };
       }
   
       console.log('Announcement posted successfully:', announcementData);
-      // Return success data
+    
       return { data: announcementData };
     } catch (error) {
       console.error('Unexpected error:', error.message);
-      return { error: { message: error.message } }; // Return error object
+      return { error: { message: error.message } }; 
     }
   };
   
@@ -252,7 +257,7 @@ export default function CreateAnnouncements() {
               <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                 <ul className="py-2">
                   <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                  <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`}>Help</li>
+                  <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
                   <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                 </ul>
               </div>

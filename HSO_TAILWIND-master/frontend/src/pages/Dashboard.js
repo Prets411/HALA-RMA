@@ -13,10 +13,9 @@ export default function Dashboard() {
   const settingsMenuRef = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState(""); 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
-  const [announcements, setAnnouncements] = useState([]); // Initialize as an empty array
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+  const [announcements, setAnnouncements] = useState([]); 
   const [programs, setPrograms] = useState([])
-  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -25,13 +24,11 @@ export default function Dashboard() {
       .select();
 
       if(error){
-        setFetchError("Error Fetching");
         setAnnouncements([]);
         console.log(error);
       }
       if(data){
         setAnnouncements(data);
-        setFetchError(null);
       }
     } 
 
@@ -41,13 +38,11 @@ export default function Dashboard() {
       .select();
 
       if(error){
-        setFetchError("Error Fetching");
         setAnnouncements([]);
         console.log(error);
       }
       if(data){
         setPrograms(data);
-        setFetchError(null);
       }
     }
     fetchAnnouncements();
@@ -91,7 +86,6 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  // Modal state for announcements
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [programsModalVisible, setProgramsModalVisible] = useState(false);
@@ -117,7 +111,6 @@ export default function Dashboard() {
     setSelectedProgram(null);
   };
 
-  // Sorting and filtering logic for announcements
   const [filter, setFilter] = useState("all");
 
   const handleSortChange = (event) => {
@@ -156,7 +149,6 @@ export default function Dashboard() {
     return filtered;
   })();
 
-  // Sorting logic for programs
   const [programFilter, setProgramFilter] = useState("all");
 
   const sortedPrograms = (() => {
@@ -164,10 +156,10 @@ export default function Dashboard() {
 
     switch (programFilter) {
       case 'oldest':
-        filteredPrograms = [...filteredPrograms].sort((a, b) => new Date(a.date) - new Date(b.date));
+        filteredPrograms = [...filteredPrograms].sort((a, b) => new Date(a.created_at) - new Date(b.date));
         break;
       case 'newest':
-        filteredPrograms = [...filteredPrograms].sort((a, b) => new Date(b.date) - new Date(a.date));
+        filteredPrograms = [...filteredPrograms].sort((a, b) => new Date(b.created_at) - new Date(a.date));
         break;
       default:
         break;
@@ -176,16 +168,16 @@ export default function Dashboard() {
     return filteredPrograms;
   })();
 
-  // Search functionality
+
   const filteredAnnouncements = sortedAnnouncements.filter(announcement => {
-    const text = (announcement.title || "").toLowerCase();  // Ensure it's not undefined
-    const details = (announcement.content || "").toLowerCase();  // Ensure it's not undefined
+    const text = (announcement.title || "").toLowerCase();  
+    const details = (announcement.content || "").toLowerCase();  
     return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
   });
 
   const filteredPrograms = sortedPrograms.filter(program => {
-    const text = (program.title || "").toLowerCase();  // Ensure it's not undefined
-    const details = (program.what || "").toLowerCase();  // Ensure it's not undefined
+    const text = (program.title || "").toLowerCase(); 
+    const details = (program.what || "").toLowerCase();  
     return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
   });
 
@@ -286,7 +278,7 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex items-center space-x-2 relative">
-              <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/analytics')} />
+              <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Analytics')} />
               <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" />
               <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
@@ -301,7 +293,7 @@ export default function Dashboard() {
                   <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                     <ul className="py-2">
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                     </ul>
                   </div>
@@ -314,7 +306,7 @@ export default function Dashboard() {
           {/* Announcements Card Container */}
           <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
             <div className="flex justify-between items-center">
-              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center uppercase`}>ANNOUNCEMENTS</h3>
+              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Announcements</h3>
               <select className="border border-gray-300 rounded p-1" value={filter} onChange={handleSortChange}>
                 <option value="all">All</option>
                 <option value="oldest">Oldest</option>
@@ -338,7 +330,7 @@ export default function Dashboard() {
                     style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
                   >
                     <img src={announcement.images} alt={announcement.title} className="h-24 w-full object-cover mb-2" />
-                    <h4 className={`${announcement.color} font-semibold`}>{announcement.title}</h4>
+                    <h4 className= 'font-semibold'>{announcement.title}</h4>
                     <p className="text-xs">{announcement.content}</p>
                     <p className="text-gray-500 text-xs">{announcement.created_at} at {announcement.time}</p>
                     <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
@@ -354,7 +346,7 @@ export default function Dashboard() {
                 {/* Programs Card Container */}
                 <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
             <div className="flex justify-between items-center">
-              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center uppercase`}>PROGRAMS</h3>
+              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Programs</h3>
               {/* Programs Sorting Dropdown */}
               <select className="border border-gray-300 rounded p-1" value={programFilter} onChange={setProgramFilter}>
                 <option value="all">All</option>
@@ -372,12 +364,12 @@ export default function Dashboard() {
                     className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
                     style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
                   >
-                  <img src={program.images} alt={program.title} className="h-24 w-full object-cover mb-2" />
-                  <h4 className="font-semibold">{program.title}</h4>
+                  <img src={program.images} alt={program.who} className="h-24 w-full object-cover mb-2" />
+                  <h4 className="font-semibold">{program.who}</h4>
                   <p className="text-sm">{program.what}</p>
                   <p className="text-gray-500 text-xs">When: {program.when_date} at {program.when_time}</p>
                   <p className="text-gray-500 text-xs">Where: {program.where}</p>
-                  <p className="text-gray-500 text-xs">Who: {program.title}</p>
+                  <p className="text-gray-500 text-xs">Who: {program.who}</p>
                     <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
                     onClick={() => handleShowMoreProgram(program)}
                   >Show More
@@ -397,7 +389,7 @@ export default function Dashboard() {
          {modalVisible && selectedAnnouncement && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white rounded-lg p-4 max-w-lg w-full">
-          <h2 className={`text-lg font-bold ${selectedAnnouncement.color}`}>{selectedAnnouncement.text}</h2>
+          <h2 className={`text-lg font-bold ${selectedAnnouncement.color}`}>{selectedAnnouncement.title}</h2>
           <img src={selectedAnnouncement.images} alt={selectedAnnouncement.title} className="h-48 w-full object-cover mb-2" />
           <p className={`${selectedAnnouncement.color}`}>{selectedAnnouncement.content}</p>
           <p className="text-gray-500 text-xs">{selectedAnnouncement.created_at}</p>
@@ -412,12 +404,12 @@ export default function Dashboard() {
       {programsModalVisible && selectedProgram && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-4 max-w-lg w-full">
-            <h2 className={`text-lg font-bold`}>{selectedProgram.title}</h2>
-            <img src={selectedProgram.images} alt={selectedProgram.title} className="h-48 w-full object-cover mb-2" />
-            <p className="text-black">{selectedProgram.details}</p>
+            <h2 className={`text-lg font-bold`}>{selectedProgram.who}</h2>
+            <img src={selectedProgram.images} alt={selectedProgram.who} className="h-48 w-full object-cover mb-2" />
+            <p className="text-black">{selectedProgram.what}</p>
             <p className="text-gray-500 text-xs">When: {selectedProgram.when_date} at {selectedProgram.when_time}</p>
             <p className="text-gray-500 text-xs">Where: {selectedProgram.where}</p>
-            <p className="text-gray-500 text-xs">Who: {selectedProgram.title}</p>
+            <p className="text-gray-500 text-xs">Who: {selectedProgram.who}</p>
             <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
                     onClick={closeProgramModal}>
                       Close
