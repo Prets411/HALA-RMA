@@ -18,6 +18,7 @@ export default function UploadPrograms() {
   const [showPostConfirmation, setShowPostConfirmation] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const settingsMenuRef = useRef(null);
+  const [additionalText, setAdditionalText] = useState("");
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -78,6 +79,10 @@ export default function UploadPrograms() {
     setShowPostConfirmation(true);
   };
 
+  const handleAdditionalTextChange = (event) => {
+    setAdditionalText(event.target.value); // Update state when text input changes
+  };
+
   const postDataToSupabase = async () => {
     try {
       // Step 1: Upload images to Supabase Storage if there are any images
@@ -93,6 +98,7 @@ export default function UploadPrograms() {
             when_date: whenDate,
             when_time: whenTime,
             where: where === "Others" ? otherLocation : where,
+            additional_text: additionalText,
             images: images.map((image) => image.name), // Storing image URLs in the database
           },
         ]);
@@ -366,6 +372,15 @@ export default function UploadPrograms() {
                 </div>
               )}
             </div>
+            <div>
+            <label className={`block text-sm font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-700'}`}>Forms:</label>
+            <textarea
+              className={`border rounded-lg w-full p-2 text-sm flex-grow h-20 border border-blue-300 ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
+              value={additionalText}
+              onChange={handleAdditionalTextChange} // Handle text input change
+              placeholder="Enter additional details or notes here..."
+            />
+          </div>
             <div className="flex justify-between mt-2">
               <button 
                 type="button" 
