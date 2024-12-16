@@ -195,7 +195,7 @@ export default function Notification() {
           </div>
           <div className={`bg-gray-50 p-4 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} max-h-96 overflow-y-auto`}>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon-500">Incident Reports</span>}</h2>
+        <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Incident Reports Notifications</h2>
       </div>
       
       <div className="overflow-auto">
