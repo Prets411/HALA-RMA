@@ -252,7 +252,7 @@ const Analytics = () => {
             </div>
             <div className="flex items-center space-x-2 relative">
               <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Analytics')} />
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
               <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
                 onClick={() => navigate('/profile')} 
@@ -280,7 +280,7 @@ const Analytics = () => {
 
 
         
-        <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-left uppercase`}>ANALYTICS</h3>
+        <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-left `}>Analytics</h3>
         <br></br>
         {/* User and Reports Summary */}
         <div className="grid grid-cols-2 gap-4 mb-8">

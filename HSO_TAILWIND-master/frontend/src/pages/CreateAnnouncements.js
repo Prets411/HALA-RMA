@@ -16,6 +16,18 @@ export default function CreateAnnouncements() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const settingsMenuRef = useRef(null);
   
+  async function uploadImage(file) {
+    const { data, error } = await supabase.storage
+      .from('IMAGES')
+      .upload('Announcements/' + file.name, file);
+    
+    if (error) {
+      console.error("Error uploading image:", error);
+      return;
+    }
+    
+    console.log('Image uploaded:', data);
+  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {

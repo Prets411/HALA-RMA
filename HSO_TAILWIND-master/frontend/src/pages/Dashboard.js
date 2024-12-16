@@ -279,7 +279,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-2 relative">
               <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Analytics')} />
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
               <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
                 onClick={() => navigate('/profile')} 
@@ -366,7 +366,6 @@ export default function Dashboard() {
                   >
                   <img src={program.images} alt={program.who} className="h-24 w-full object-cover mb-2" />
                   <h4 className="font-semibold">{program.who}</h4>
-                  <p className="text-sm">{program.what}</p>
                   <p className="text-gray-500 text-xs">When: {program.when_date} at {program.when_time}</p>
                   <p className="text-gray-500 text-xs">Where: {program.where}</p>
                   <p className="text-gray-500 text-xs">Who: {program.who}</p>

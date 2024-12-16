@@ -3,17 +3,18 @@ import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPa
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-export default function Help() {
-      const navigate = useNavigate();
-      const [selectedDate, setSelectedDate] = useState(new Date());
-      const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
-      const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-      const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-      const [shake, setShake] = useState(false);
-      const settingsMenuRef = useRef(null);
-      const [isOpen, setIsOpen] = useState(false);
-      const [searchTerm, setSearchTerm] = useState(""); 
-      const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+export default function Notification() {
+  const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [shake, setShake] = useState(false);
+  const settingsMenuRef = useRef(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
 
   const today = new Date(); 
   const todayDate = today.getDate(); 
@@ -51,6 +52,25 @@ export default function Help() {
   const handleLogout = () => {
     navigate('/login');
   };
+
+  const [incidents, setIncidents] = useState([]);
+
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('incidents')
+          .select('*');
+        
+        if (error) throw error;
+        setIncidents(data);
+      } catch (error) {
+        console.error('Error fetching incidents:', error);
+      }
+    };
+    
+    fetchIncidents();
+  }, []);
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
@@ -173,28 +193,34 @@ export default function Help() {
               <FaBars className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer md:hidden" onClick={() => setIsOpen(!isOpen)} />
             </div>
           </div>
+          <div className={`bg-gray-50 p-4 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} max-h-96 overflow-y-auto`}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon-500">Incident Reports</span>}</h2>
+      </div>
+      
+      <div className="overflow-auto">
+        {incidents.length === 0 ? (
+          <p>No incidents to display.</p>
+        ) : (
+          incidents.map((incident, index) => (
+            <div
+              key={index}
+              className={`bg-white p-3 mb-3 rounded-lg shadow-sm ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}`}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <p className="text-lg font-semibold">{incident.date_observed},{incident.time_observed}</p>
+              </div>
+              <p className={`text-md ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>{incident.description}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
 
-          <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
-            <div className="flex justify-between items-center">
-            <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>
-                Help Center
-            </h3>
-            </div>
-            <div className="mt-4 px-6 py-4 bg-gray-100 rounded-lg shadow-md max-w-lg">
-            <p className="text-xl font-semibold text-gray-700 mb-2">For more information, please contact us!</p>
-            
-            <div className="text-lg text-gray-800 mb-2">
-                <a href="mailto:g6capstone2024@gmail.com" className="hover:text-blue-500">g6capstone2024@gmail.com</a>
-            </div>
-            
-            <div className="text-lg text-gray-800 mb-2">
-                <p>+63-994-694-4232</p>
-            </div>
-            </div>
-
-
-          </div>
         </div>
+
+        
+
      
       </main>
 

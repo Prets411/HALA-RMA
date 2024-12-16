@@ -241,7 +241,7 @@ export default function UploadPrograms() {
           </div>
           <div className="flex items-center space-x-2 relative">
             <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/analytics')} />
-            <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" />
+            <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
             <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
                 onClick={() => navigate('/profile')} 

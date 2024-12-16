@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import { supabase } from './supabaseClient';
 import Analytics from './pages/Analytics';
 import Help from './pages/Help';
+import Notification from './pages/Notification';
 
 function App() {
 
@@ -34,6 +35,7 @@ function App() {
         <Route path="/settings" element={<Settings />}/>
         <Route path="/analytics" element={<Analytics />}/>
         <Route path="/help" element={<Help />}/>
+        <Route path="/notification" element={<Notification />}/>
       </Routes>
     </Router>
   );
