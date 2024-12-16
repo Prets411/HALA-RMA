@@ -98,7 +98,7 @@ export default function UploadPrograms() {
             when_date: whenDate,
             when_time: whenTime,
             where: where === "Others" ? otherLocation : where,
-            additional_text: additionalText,
+            forms: additionalText,
             images: images.map((image) => image.name), // Storing image URLs in the database
           },
         ]);
