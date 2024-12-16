@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaBars, FaChartBar, FaExclamationCircle, FaFileAlt, FaClipboardList, FaPaintBrush, FaChartLine } from 'react-icons/fa'; 
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const ColorLegend = () => {
+const GColorLegend = () => {
     const navigate = useNavigate();
     const location = useLocation(); // Get the current location
     const [menuActive, setMenuActive] = useState(false);
@@ -87,31 +87,20 @@ const ColorLegend = () => {
                 <nav className="mt-6">
                     <ul className="space-y-1">
                         <li>
-                            <a onClick={() => navigate('/dashboard')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/dashboard' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+                            <a onClick={() => navigate('/gsd')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/dashboard' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                                 <FaChartBar className="w-5 h-5 mr-2" />
                                 Dashboard
                             </a>
                         </li>
                         <li>
-                            <a onClick={() => navigate('/reports')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+                            <a onClick={() => navigate('/greports')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                                 Incident Report
                             </a>
                         </li>
+
                         <li>
-                            <a onClick={() => navigate('/create')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/create' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                                <FaFileAlt className="w-5 h-5 mr-2" />
-                                Create Announcements
-                            </a>
-                        </li>
-                        <li>
-                            <a onClick={() => navigate('/upload')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/upload' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                                <FaClipboardList className="w-5 h-5 mr-2" />
-                                Upload Programs
-                            </a>
-                        </li>
-                        <li>
-                            <a onClick={() => navigate('/color')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+                            <a onClick={() => navigate('/gcolor')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                                 <FaPaintBrush className="w-5 h-5 mr-2" />
                                 Color Wheel Legend
                             </a>
@@ -133,10 +122,10 @@ const ColorLegend = () => {
                         />
                     </div>
                     <div className="flex items-center space-x-2 relative">
-                        <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
+                        <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gnotification')} />
                         <FaUserCircle 
                             className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                            onClick={() => navigate('/profile')} // Navigate to profile on click
+                            onClick={() => navigate('/gprofile')} // Navigate to profile on click
                         />
                         <div className="relative">
                             <FaCog 
@@ -146,8 +135,8 @@ const ColorLegend = () => {
                             {showSettingsMenu && (
                                 <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                                     <ul className="py-2">
-                                        <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                                        <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                                        <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/gsettings')}>Settings</li>
+                                        <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/ghelp')}>Help</li>
                                         <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                                     </ul>
                                 </div>
@@ -212,6 +201,6 @@ const ColorLegend = () => {
     );
 };
 
-export default ColorLegend;
+export default GColorLegend;
 
 //

@@ -15,19 +15,6 @@ export default function CreateAnnouncements() {
   const [showPostConfirmation, setShowPostConfirmation] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
   const settingsMenuRef = useRef(null);
-  
-  async function uploadImage(file) {
-    const { data, error } = await supabase.storage
-      .from('IMAGES')
-      .upload('Announcements/' + file.name, file);
-    
-    if (error) {
-      console.error("Error uploading image:", error);
-      return;
-    }
-    
-    console.log('Image uploaded:', data);
-  }
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,48 +82,74 @@ export default function CreateAnnouncements() {
       // Get the current user from Supabase
       const response = await supabase.auth.getUser();
   
-      // Check for any errors in retrieving user data
       if (response.error) {
         console.error('Authentication error:', response.error.message);
-        return { error: response.error }; 
+        return { error: response.error };
       }
   
       const user = response.data?.user;
   
-     
       if (!user) {
         console.error('User not authenticated.');
-        return { error: { message: 'User not authenticated.' } }; 
+        return { error: { message: 'User not authenticated.' } };
       }
   
-     
-      const { data: announcementData, error: insertError } = await supabase
+      // Upload Images to Supabase Bucket under "Announcements" folder
+      const imageURLs = [];
+      for (const image of images) {
+        const fileExt = image.name.split('.').pop();
+        const filePath = `Announcements/${Date.now()}_${image.name}`; // Store in 'Announcements' folder
+  
+        // Upload the image to the "IMAGES" bucket
+        const { error: uploadError } = await supabase
+          .storage
+          .from('IMAGES') // Correct bucket name
+          .upload(filePath, image);
+  
+        if (uploadError) {
+          console.error('Error uploading image:', uploadError.message);
+          return { error: uploadError };
+        }
+  
+        // Get the public URL of the uploaded image
+        const { data } = supabase
+          .storage
+          .from('IMAGES') // Correct bucket name
+          .getPublicUrl(filePath);
+  
+        if (data) {
+          imageURLs.push(data.publicUrl);
+        }
+      }
+  
+      // Insert data into 'announcements' table
+      const { error: insertError } = await supabase
         .from('announcements')
         .insert([
           {
             title: announcementTitle,
             content: announcement,
-            created_by: user.id, 
+            created_by: user.id,
             color: selectedColor,
-            images: images.map((image) => image.name), 
+            images: imageURLs.length > 0 ? imageURLs[0] : null, // Store the first image URL
             created_at: new Date().toISOString(),
           },
         ]);
-
-    
+  
       if (insertError) {
         console.error('Error posting announcement:', insertError.message);
         return { error: insertError };
       }
   
-      console.log('Announcement posted successfully:', announcementData);
-    
-      return { data: announcementData };
+      console.log('Announcement posted successfully!');
+      return { success: true };
     } catch (error) {
       console.error('Unexpected error:', error.message);
-      return { error: { message: error.message } }; 
+      return { error: { message: error.message } };
     }
   };
+  
+  
   
   
   
@@ -254,7 +267,6 @@ export default function CreateAnnouncements() {
             />
           </div>
           <div className="flex items-center space-x-2 relative">
-            <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/analytics')} />
             <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
             <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 

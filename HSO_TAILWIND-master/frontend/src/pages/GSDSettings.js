@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaBars, FaChartBar, FaExclamationCircle, FaFileAlt, FaClipboardList, FaPaintBrush, FaChartLine } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
-const Settings = () => {
+const GSettings = () => {
   const navigate = useNavigate();
   const [emailNotifications, setEmailNotifications] = useState(() => JSON.parse(localStorage.getItem('emailNotifications')) || false);
   const [pushNotifications, setPushNotifications] = useState(() => JSON.parse(localStorage.getItem('pushNotifications')) || false);
@@ -66,31 +66,19 @@ const Settings = () => {
         <nav className="mt-6">
           <ul className="space-y-1">
             <li>
-              <a onClick={() => navigate('/dashboard')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/gsd')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaChartBar className="w-5 h-5 mr-2" />
                 Dashboard
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/reports')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/greports')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                 Incident Report
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/create')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
-                <FaFileAlt className="w-5 h-5 mr-2" />
-                Create Announcements
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/upload')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
-                <FaClipboardList className="w-5 h-5 mr-2" />
-                Upload Programs
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/color')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/gcolor')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaPaintBrush className="w-5 h-5 mr-2" />
                 Color Wheel Legend
               </a>
@@ -115,15 +103,15 @@ const Settings = () => {
               />
             </div>
             <div className="flex items-center space-x-2 relative">
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
-              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/profile')} />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gNotification')} />
+              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gprofile')} />
               <div className="relative">
                 <FaCog className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => setShowSettingsMenu(!showSettingsMenu)} />
                 {showSettingsMenu && (
                   <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                     <ul className="py-2">
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/gsettings')}>Settings</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/ghelp')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                     </ul>
                   </div>
@@ -183,4 +171,4 @@ const Settings = () => {
   );
 };
 
-export default Settings;
+export default GSettings;

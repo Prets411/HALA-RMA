@@ -82,14 +82,13 @@ export default function UploadPrograms() {
   const handleAdditionalTextChange = (event) => {
     setAdditionalText(event.target.value); // Update state when text input changes
   };
-
   const postDataToSupabase = async () => {
     try {
-      // Step 1: Upload images to Supabase Storage if there are any images
+      // Upload images to Supabase Storage
       const uploadedImageUrls = await uploadImages(images);
-
-      // Step 2: Insert the program data into Supabase table
-      const { data, error } = await supabase
+    
+      // Insert the program data into Supabase table
+      const { error } = await supabase
         .from('programs')
         .insert([
           {
@@ -99,40 +98,46 @@ export default function UploadPrograms() {
             when_time: whenTime,
             where: where === "Others" ? otherLocation : where,
             forms: additionalText,
-            images: images.map((image) => image.name), // Storing image URLs in the database
+            images: uploadedImageUrls, // Store uploaded image URLs as an array
+            created_at: new Date().toISOString(),
+            color: 'blue', // Default color value
           },
         ]);
-
+    
       if (error) throw error;
-
+    
       // Reset the form after successful submission
-      alert('Program posted successfully!');
+      alert('Program uploaded successfully!');
       resetForm();
       setShowPostConfirmation(false);
       navigate('/dashboard');
     } catch (error) {
-      alert('Error posting data: ' + error.message);
+      console.error('Error posting data:', error.message);
+      alert('Error posting program: ' + error.message);
     }
   };
+  
 
   const uploadImages = async (files) => {
     const imageUrls = [];
     for (let file of files) {
-      const { data, error } = await supabase.storage
-        .from('program-images') // Make sure the bucket name is correct
-        .upload(`public/${file.name}`, file);
-
+      const filePath = `Programs/${Date.now()}_${file.name}`; // Upload path under "IMAGES/Programs/"
+  
+      // Upload the image to Supabase Storage
+      const { error } = await supabase.storage
+        .from('IMAGES') // Correct bucket name
+        .upload(filePath, file);
+  
       if (error) {
-        console.error('Error uploading image:', error);
+        console.error('Error uploading image:', error.message);
       } else {
-        const { publicURL, error: urlError } = supabase.storage
-          .from('program-images')
-          .getPublicUrl(data.path);
-
-        if (urlError) {
-          console.error('Error getting image URL:', urlError);
-        } else {
-          imageUrls.push(publicURL);
+        // Retrieve the public URL of the uploaded file
+        const { data } = supabase.storage
+          .from('IMAGES')
+          .getPublicUrl(filePath);
+  
+        if (data) {
+          imageUrls.push(data.publicUrl);
         }
       }
     }
@@ -246,7 +251,6 @@ export default function UploadPrograms() {
             />
           </div>
           <div className="flex items-center space-x-2 relative">
-            <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/analytics')} />
             <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
             <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 

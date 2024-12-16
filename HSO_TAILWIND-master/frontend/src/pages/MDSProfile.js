@@ -3,7 +3,7 @@ import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPa
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-const Profile = () => {
+const MProfile = () => {
   const navigate = useNavigate();
   const [displayName, setDisplayName] = useState(''); // Initial state for display name
   const [email, setEmail] = useState(''); // Initial state for email
@@ -168,34 +168,20 @@ const Profile = () => {
           <ul className="space-y-1">
             <li>
               <a 
-                onClick={() => navigate('/dashboard')} 
+                onClick={() => navigate('/mds')} 
                 className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/dashboard' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaChartBar className="w-5 h-5 mr-2" />
                 Dashboard
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/reports')} className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/mreports')} className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                 Incident Report
               </a>
             </li>
             <li>
-              <a 
-                onClick={() => navigate('/create')} 
-                className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/create' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                <FaFileAlt className="w-5 h-5 mr-2" />
-                Create Announcements
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/upload')} className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/upload' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                <FaClipboardList className="w-5 h-5 mr-2" />
-                Upload Programs
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/color')} className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/mcolor')} className={`flex items-center px-4 py-2 text-white ${window.location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaPaintBrush className="w-5 h-5 mr-2" />
                 Color Wheel Legend
               </a>
@@ -220,15 +206,15 @@ const Profile = () => {
               />
             </div>
             <div className="flex items-center space-x-2 relative">
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
-              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/profile')} />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/mNotification')} />
+              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/mprofile')} />
               <div className="relative">
                 <FaCog className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => setShowSettingsMenu(!showSettingsMenu)} />
                 {showSettingsMenu && (
                   <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                     <ul className="py-2">
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/msettings')}>Settings</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/mhelp')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                     </ul>
                   </div>
@@ -269,7 +255,7 @@ const Profile = () => {
                 <div>
                   <p className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{displayName}</p>
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-black'}`}>{email}</p>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-black'} cursor-pointer`} onClick={() => navigate('/settings')}>
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-black'} cursor-pointer`} onClick={() => navigate('/msettings')}>
                     Go to Settings
                   </p>
                 </div>
@@ -330,4 +316,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default MProfile;

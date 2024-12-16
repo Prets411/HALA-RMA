@@ -42,25 +42,38 @@ export default function Login() {
     return () => clearInterval(shakeInterval);
   }, []);
 
-  const handleNavClick = (link) => {
-    navigate(`/${link}`);
-  };
-
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    const { error } = await supabase.auth.signInWithOtp({ email });
-
-    if (error) {
-      console.error('Error sending OTP:', error.message);
+  
+    // Check if the email exists in the 'Account' table
+    const { data, error } = await supabase
+      .from('Account')
+      .select('email')
+      .eq('email', email)
+      .single();
+  
+    if (error || !data) {
+      setErrorMessage('This email is not registered. Please check the email.');
+      return;
+    }
+  
+    // If email exists, proceed to send OTP
+    const { otpError } = await supabase.auth.signInWithOtp({ email });
+  
+    if (otpError) {
+      console.error('Error sending OTP:', otpError.message);
+      setErrorMessage('Error sending OTP, please try again.');
     } else {
       setOtpSent(true);
+      setErrorMessage(''); // Clear any previous error messages
     }
   };
+  
 
   const handleOtpSubmit = async (e, otp) => {
     e.preventDefault();
     try {
+      // Verify OTP with Supabase
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
@@ -69,31 +82,39 @@ export default function Login() {
   
       if (error) {
         console.error('Error verifying OTP:', error.message);
+        setErrorMessage('Invalid OTP. Please try again.');
         return;
       }
   
+      // Fetch user_type for the authenticated user
       const { data, error: userError } = await supabase
         .from('Account')
         .select('user_type')
         .eq('email', email)
-        .single(); 
+        .single();
   
-      if (userError) {
-        console.error('Error fetching user data:', userError.message);
+      if (userError || !data) {
+        console.error('Error fetching user data:', userError?.message);
+        setErrorMessage('Error fetching user data. Please try again.');
         return;
       }
   
-      if (data.user_type !== 'Admin') {
-        setErrorMessage('Unauthorized access: Only Admins are allowed.');
-        return; 
+      // Navigate based on user_type
+      if (data.user_type === 'Admin') {
+        navigate('/dashboard');
+      } else if (data.user_type === 'GSD') {
+        navigate('/gsd');
+      } else if (data.user_type === 'MDS') {618951
+        navigate('/mds'); // Navigate to '/mds' for MDS user_type
+      } else {
+        setErrorMessage('Unauthorized access: User not allowed.');
       }
-  
-      setErrorMessage(''); 
-      navigate('/dashboard'); 
     } catch (error) {
       console.error('OTP verification failed:', error.message);
+      setErrorMessage('An unexpected error occurred. Please try again.');
     }
   };
+  
   
   const goBack = () => {
     setOtpSent(false);  

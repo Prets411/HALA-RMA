@@ -3,18 +3,17 @@ import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPa
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-export default function Notification() {
-  const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [shake, setShake] = useState(false);
-  const settingsMenuRef = useRef(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); 
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
-
+export default function GHelp() {
+      const navigate = useNavigate();
+      const [selectedDate, setSelectedDate] = useState(new Date());
+      const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+      const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+      const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+      const [shake, setShake] = useState(false);
+      const settingsMenuRef = useRef(null);
+      const [isOpen, setIsOpen] = useState(false);
+      const [searchTerm, setSearchTerm] = useState(""); 
+      const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   const today = new Date(); 
   const todayDate = today.getDate(); 
@@ -53,25 +52,6 @@ export default function Notification() {
     navigate('/login');
   };
 
-  const [incidents, setIncidents] = useState([]);
-
-  useEffect(() => {
-    const fetchIncidents = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('incidents')
-          .select('*');
-        
-        if (error) throw error;
-        setIncidents(data);
-      } catch (error) {
-        console.error('Error fetching incidents:', error);
-      }
-    };
-    
-    fetchIncidents();
-  }, []);
-
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
       <aside
@@ -90,31 +70,20 @@ export default function Notification() {
         <nav className="mt-6">
           <ul className="space-y-1">
             <li>
-              <a onClick={() => navigate('/dashboard')} className="flex items-center px-4 py-2 text-white bg-gray-400 rounded"> 
+              <a onClick={() => navigate('/gsd')} className="flex items-center px-4 py-2 text-white bg-gray-400 rounded"> 
                 <FaChartBar className="w-5 h-5 mr-2" />
                 Dashboard
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/reports')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
+              <a onClick={() => navigate('/greports')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                 Incident Report
               </a>
             </li>
+
             <li>
-              <a onClick={() => navigate('/create')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
-                <FaFileAlt className="w-5 h-5 mr-2" />
-                Create Announcements
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/upload')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
-                <FaClipboardList className="w-5 h-5 mr-2" />
-                Upload Programs
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/color')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
+              <a onClick={() => navigate('/gcolor')} className="flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded">
                 <FaPaintBrush className="w-5 h-5 mr-2" />
                 Color Wheel Legend
               </a>
@@ -169,10 +138,11 @@ export default function Notification() {
               />
             </div>
             <div className="flex items-center space-x-2 relative">
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
+              <FaChartLine className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gAnalytics')} />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gNotification')} />
               <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                onClick={() => navigate('/profile')} 
+                onClick={() => navigate('/gprofile')} 
               />
               <div className="relative">
                 <FaCog 
@@ -182,8 +152,8 @@ export default function Notification() {
                 {showSettingsMenu && (
                   <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
                     <ul className="py-2">
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/gsettings')}>Settings</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/ghelp')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                     </ul>
                   </div>
@@ -192,34 +162,28 @@ export default function Notification() {
               <FaBars className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer md:hidden" onClick={() => setIsOpen(!isOpen)} />
             </div>
           </div>
-          <div className={`bg-gray-50 p-4 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} max-h-96 overflow-y-auto`}>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Incident Reports Notifications</h2>
-      </div>
-      
-      <div className="overflow-auto">
-        {incidents.length === 0 ? (
-          <p>No incidents to display.</p>
-        ) : (
-          incidents.map((incident, index) => (
-            <div
-              key={index}
-              className={`bg-white p-3 mb-3 rounded-lg shadow-sm ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'}`}
-            >
-              <div className="flex justify-between items-center mb-2">
-                <p className="text-lg font-semibold">{incident.date_observed},{incident.time_observed}</p>
-              </div>
-              <p className={`text-md ${theme === 'dark' ? 'text-gray-300' : 'text-gray-800'}`}>{incident.description}</p>
+
+          <div className={`shadow-md border ${theme === 'dark' ? 'border-white' : 'border-gray-900'} rounded-lg p-2 mb-4 flex flex-col`}>
+            <div className="flex justify-between items-center">
+            <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>
+                Help Center
+            </h3>
             </div>
-          ))
-        )}
-      </div>
-    </div>
+            <div className="mt-4 px-6 py-4 bg-gray-100 rounded-lg shadow-md max-w-lg">
+            <p className="text-xl font-semibold text-gray-700 mb-2">For more information, please contact us!</p>
+            
+            <div className="text-lg text-gray-800 mb-2">
+                <a href="mailto:g6capstone2024@gmail.com" className="hover:text-blue-500">g6capstone2024@gmail.com</a>
+            </div>
+            
+            <div className="text-lg text-gray-800 mb-2">
+                <p>+63-994-694-4232</p>
+            </div>
+            </div>
 
+
+          </div>
         </div>
-
-        
-
      
       </main>
 

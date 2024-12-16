@@ -3,7 +3,7 @@ import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPa
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
-export default function IncidentReport() {
+export default function GIncidentReport() {
   const navigate = useNavigate();
   const location = useLocation(); // Get the current location
   const [isOpen, setIsOpen] = useState(false);
@@ -24,22 +24,26 @@ export default function IncidentReport() {
   const [incidentReports, setIncidentReports] = useState([]);
 
   useEffect(() => {
-    // Fetch incident reports from Supabase
+    // Fetch incident reports from Supabase with filters
     const fetchReports = async () => {
       try {
         const { data, error } = await supabase
           .from('incidents')
-          .select('*');
-        
+          .select('*')
+          .eq('status', 'Ongoing') // Only fetch reports with status 'Ongoing'
+          .eq('office', 'General Services Department'); // Only fetch reports for 'General Services Department'
+  
         if (error) throw error;
+  
         setIncidentReports(data);
       } catch (err) {
         console.error('Error fetching incident reports:', err);
       }
     };
-
+  
     fetchReports();
   }, []);
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -80,34 +84,28 @@ export default function IncidentReport() {
     setIncidentReports(updatedReports);
   };
 
-  const handleSendReport = async (index) => {
-    const selectedDepartment = incidentReports[index].selectedDepartment;
-    const selectedReport = incidentReports[index];
-    
-    if (selectedDepartment) {
-      // Update the status and office locally
-      const updatedReports = [...incidentReports];
-      updatedReports[index].status = "Ongoing"; // Set status to "Ongoing"
-      updatedReports[index].office = selectedDepartment; // Set office to the selected department
-      setIncidentReports(updatedReports);
-      
-      try {
-        // Update the status and office in Supabase
-        const { error } = await supabase
-          .from('incidents')
-          .update({
-            status: 'Ongoing',  // Set the status to Ongoing
-            office: selectedDepartment,  // Set the office to the selected department
-          })
-          .eq('id', selectedReport.id);  // Ensure the correct report is updated
-  
-        if (error) throw error;
-  
-        alert(`Report ${selectedReport.id} sent to: ${selectedDepartment}`);
-      } catch (err) {
-        console.error('Error updating incident:', err);
-        alert('There was an error sending the report.');
-      }
+  const handleSendReport = async (reportId) => {
+    try {
+      // Update the incident's status to 'Resolved' and office to 'Health and Safety Office'
+      const { error } = await supabase
+        .from('incidents')
+        .update({
+          status: 'Resolved',
+          office: 'Health and Safety Office',
+        })
+        .eq('id', reportId);
+
+      if (error) throw error;
+
+      // Update the local state to reflect the change
+      setIncidentReports(prevReports =>
+        prevReports.filter(report => report.id !== reportId) // Remove the resolved report
+      );
+
+      alert(`Report ${reportId} marked as Resolved.`);
+    } catch (err) {
+      console.error('Error updating incident report:', err);
+      alert('Error updating the report. Please try again.');
     }
   };
 
@@ -155,34 +153,21 @@ export default function IncidentReport() {
           <ul className="space-y-1">
             <li>
               <a 
-                onClick={() => navigate('/dashboard')} 
+                onClick={() => navigate('/gsd')} 
                 className={`flex items-center px-4 py-2 text-white ${location.pathname === '/dashboard' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaChartBar className="w-5 h-5 mr-2" />
                 Dashboard
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/reports')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/greports')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/reports' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                 Incident Report
               </a>
             </li>
+
             <li>
-              <a 
-                onClick={() => navigate('/create')} 
-                className={`flex items-center px-4 py-2 text-white ${location.pathname === '/create' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                <FaFileAlt className="w-5 h-5 mr-2" />
-                Create Announcements
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/upload')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/upload' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
-                <FaClipboardList className="w-5 h-5 mr-2" />
-                Upload Programs
-              </a>
-            </li>
-            <li>
-              <a onClick={() => navigate('/color')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/gcolor')} className={`flex items-center px-4 py-2 text-white ${location.pathname === '/color' ? 'bg-gray-400' : 'hover:bg-gray-400'} transition-colors duration-300 rounded`}>
                 <FaPaintBrush className="w-5 h-5 mr-2" />
                 Color Wheel Legend
               </a>
@@ -206,10 +191,10 @@ export default function IncidentReport() {
             />
           </div>
           <div className="flex items-center space-x-2 relative">
-            <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
+            <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gNotification')} />
             <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                onClick={() => navigate('/profile')} // Navigate to profile on click
+                onClick={() => navigate('/gprofile')} // Navigate to profile on click
             />
             <div className="relative">
               <FaCog 
@@ -219,8 +204,8 @@ export default function IncidentReport() {
               {showSettingsMenu && (
                 <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg z-10`} ref={settingsMenuRef}>
                   <ul className="py-2">
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/gsettings')}>Settings</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/ghelp')}>Help</li>
                       <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
                   </ul>
                 </div>
@@ -295,22 +280,12 @@ export default function IncidentReport() {
                   </div>
                   {/* Dropdown for GSD and MDS */}
                   <div className="flex flex-col ml-2">
-                    <select 
-                      className={`select select-primary w-40 max-w-xs py-1 border border-gray-300 shadow-md rounded focus:outline-none focus:ring-2 focus:ring-orange-600 text-xs ${theme === 'dark' ? 'bg-gray-600 text-white' : ''}`} // Made text smaller
-                      value={report.selectedDepartment} 
-                      onChange={(e) => handleDepartmentChange(index, e.target.value)}
-                    >
-                      <option value="" disabled>Select Department</option>
-                      <option>General Services Department</option>
-                      <option>Medical and Dental Services</option>
-                    </select>
-                    <button 
-                      className={`mt-2 w-full px-2 py-1 rounded ${report.selectedDepartment ? 'bg-maroon text-white' : 'bg-gray-300 text-gray-600'}`} 
-                      onClick={() => handleSendReport(index)} 
-                      disabled={!report.selectedDepartment} // Disable button if no department is selected
-                    >
-                      Send Report
-                    </button>
+                  <button
+                    onClick={() => handleSendReport(report.id)}
+                    className={`mt-2 w-full px-2 py-1 rounded ${report.selectedDepartment ? 'bg-maroon text-white' : 'bg-gray-300 text-gray-600'}`} 
+                  >
+                    Send Report
+                  </button>
                   </div>
                 </div>
               ))
