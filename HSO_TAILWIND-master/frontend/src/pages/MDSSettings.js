@@ -66,19 +66,19 @@ const MSettings = () => {
         <nav className="mt-6">
           <ul className="space-y-1">
             <li>
-              <a onClick={() => navigate('/gsd')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/msd')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaChartBar className="w-5 h-5 mr-2" />
                 Dashboard
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/greports')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/mreports')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaExclamationCircle className="w-5 h-5 mr-2" />
                 Incident Report
               </a>
             </li>
             <li>
-              <a onClick={() => navigate('/gcolor')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
+              <a onClick={() => navigate('/mcolor')} className={`flex items-center px-4 py-2 text-white hover:bg-gray-400 transition-colors duration-300 rounded`}>
                 <FaPaintBrush className="w-5 h-5 mr-2" />
                 Color Wheel Legend
               </a>
@@ -103,8 +103,8 @@ const MSettings = () => {
               />
             </div>
             <div className="flex items-center space-x-2 relative">
-              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gNotification')} />
-              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/gprofile')} />
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/mNotification')} />
+              <FaUserCircle className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/mprofile')} />
               <div className="relative">
                 <FaCog className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => setShowSettingsMenu(!showSettingsMenu)} />
                 {showSettingsMenu && (

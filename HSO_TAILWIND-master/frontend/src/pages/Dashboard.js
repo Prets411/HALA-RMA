@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPaintBrush, FaExclamationCircle, FaBars, FaChartBar, FaChartLine } from 'react-icons/fa'; 
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { Line } from 'react-chartjs-2'; 
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,30 +29,37 @@ export default function Dashboard() {
       .from('announcements')
       .select();
 
-      if(error){
+      if (error) {
         setAnnouncements([]);
         console.log(error);
       }
-      if(data){
+      if (data) {
         setAnnouncements(data);
       }
-    } 
+    };
 
     const fetchPrograms = async () => {
-      const {data,error} = await supabase
+      const { data, error } = await supabase
       .from('programs')
       .select();
 
-      if(error){
-        setAnnouncements([]);
+      if (error) {
+        setPrograms([]);
         console.log(error);
       }
-      if(data){
+      if (data) {
         setPrograms(data);
       }
-    }
+    };
+
     fetchAnnouncements();
     fetchPrograms();
+  }, []);
+
+  useEffect(() => {
+    fetchUserTypes();
+    fetchIncidentStatus();  // This line was missing the definition of fetchIncidentStatus
+
   }, []);
 
   const today = new Date(); 
@@ -116,7 +124,7 @@ export default function Dashboard() {
     setSelectedProgram(null);
   };
 
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("recent");
 
   const handleSortChange = (event) => {
     setFilter(event.target.value);
@@ -154,7 +162,7 @@ export default function Dashboard() {
     return filtered;
   })();
 
-  const [programFilter, setProgramFilter] = useState("all");
+  const [programFilter, setProgramFilter] = useState("newest");
 
   const sortedPrograms = (() => {
     let filteredPrograms = programs;
@@ -186,95 +194,126 @@ export default function Dashboard() {
     return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
   });
 
-      useEffect(() => {
-          fetchUserTypes();
-          fetchIncidentStatus();
-        }, []);
-      
-        const fetchUserTypes = async () => {
-          try {
-            const { data, error } = await supabase.from("Account").select("user_type");
-            if (error) throw error;
-            setTotalUsers(data.length);
-          } catch (error) {
-            console.error("Error fetching user types:", error.message);
-          }
-        };
-      
-        const fetchIncidentStatus = async () => {
-          try {
-            const { data, error } = await supabase.from("incidents").select("status, created_at");
-            if (error) throw error;
-      
-            const resolved = data.filter((item) => item.status === "Resolved").length;
-            const pending = data.filter((item) => item.status === "Ongoing").length;
-            const open = data.filter((item) => item.status === "Open").length;
-      
-            setResolvedReports(resolved);
-            setPendingReports(pending);
-            setOpenReports(open);
-      
-            // Process data for monthly reports
-            const monthlyCounts = processMonthlyData(data);
-            setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
-      
-            // Update Chart Data
-            prepareChartData(resolved, pending, open, monthlyCounts);
-          } catch (error) {
-            console.error("Error fetching incidents:", error.message);
-          }
-        };
-      
-        // Function to process the monthly data
-        const processMonthlyData = (data) => {
-          const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
-      
-          data.forEach((incident) => {
-            const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
-            monthlyCounts[month] += 1; // Increment count for that month
-          });
-      
-          return monthlyCounts; // Returns an array with counts for each month
-        };
-              
-          const prepareChartData = (resolved, pending, open, monthlyCounts) => {
-              setReportsTimelineData({
-                labels: ["2021", "2022", "2023"],
-                datasets: [
-                  {
-                    label: "Reports",
-                    data: [1, 3, resolved + pending + open],  // Example for reports timeline
-                    backgroundColor: "rgba(75,192,192,0.4)",
-                    borderColor: "rgba(75,192,192,1)",
-                  },
-                ],
-              });
-      
-          setMonthlyReportsData({
-            labels: [
-              "January", "February", "March", "April", "May", "June", 
-              "July", "August", "September", "October", "November", "December"
-            ],
-            datasets: [
-              {
-                  label: "Monthly Reports",
-                  data: monthlyCounts, // Use the monthlyCounts data
-                  backgroundColor: "rgba(75, 192, 192, 0.5)",
-              },
-              {
-                  label: "Pending Reports",
-                  data: [0, pending, 0],
-                  backgroundColor: "rgba(255, 99, 132, 0.5)",
-              },
-              {
-                  label: "Resolved Reports",
-                  data: [0, resolved, 0],
-                  backgroundColor: "rgba(75, 192, 192, 0.5)",
-              },
-            ],
-          });
-        };
-  
+  // Fetch the total user types
+  const fetchUserTypes = async () => {
+    try {
+      const { data, error } = await supabase.from("account").select("user_type");
+      if (error) throw error;
+      setTotalUsers(data.length);
+    } catch (error) {
+      console.error("Error fetching user types:", error.message);
+    }
+  };
+
+  // Fetch the status of incidents and report counts
+  const fetchIncidentStatus = async () => {
+    try {
+      const { data, error } = await supabase.from("incidents").select("status, created_at");
+      if (error) throw error;
+
+      const resolved = data.filter((item) => item.status === "Resolved").length;
+      const pending = data.filter((item) => item.status === "Ongoing").length;
+      const open = data.filter((item) => item.status === "Open").length;
+
+      setResolvedReports(resolved);
+      setPendingReports(pending);
+      setOpenReports(open);
+
+      // Process data for monthly reports
+      const monthlyCounts = processMonthlyData(data);
+      setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
+
+      // Update Chart Data
+      prepareChartData(resolved, pending, open, monthlyCounts);
+    } catch (error) {
+      console.error("Error fetching incidents:", error.message);
+    }
+  };
+
+  // Function to process the monthly data
+  const processMonthlyData = (data) => {
+    const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
+
+    data.forEach((incident) => {
+      const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
+      monthlyCounts[month] += 1; // Increment count for that month
+    });
+
+    return monthlyCounts; // Returns an array with counts for each month
+  };
+
+  // Function to prepare chart data (for Reports timeline)
+  const prepareChartData = (resolved, pending, open, monthlyCounts) => {
+    setReportsTimelineData({
+      labels: ["2021", "2022", "2023"],
+      datasets: [
+        {
+          label: "Reports",
+          data: [1, 3, resolved + pending + open],  // Example for reports timeline
+          backgroundColor: "rgba(75,192,192,0.4)",
+          borderColor: "rgba(75,192,192,1)",
+        },
+      ],
+    });
+
+    setMonthlyReportsData({
+      labels: [
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+      ],
+      datasets: [
+        {
+          label: "Monthly Reports",
+          data: monthlyCounts, // Use the monthlyCounts data
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+        },
+        {
+          label: "Pending Reports",
+          data: [0, pending, 0],
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+        },
+        {
+          label: "Resolved Reports",
+          data: [0, resolved, 0],
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+        },
+      ],
+    });
+  };
+
+
+    const [currentAnnouncementPage, setCurrentAnnouncementPage] = useState(1);
+    const announcementsPerPage = 8;
+    
+    // Add pagination states for programs
+    const [currentProgramPage, setCurrentProgramPage] = useState(1);
+    const programsPerPage = 8;
+    
+
+
+    // Get paginated announcements
+    const paginatedAnnouncements = filteredAnnouncements.slice(
+      (currentAnnouncementPage - 1) * announcementsPerPage,
+      currentAnnouncementPage * announcementsPerPage
+    );
+
+    // Get paginated programs
+    const paginatedPrograms = filteredPrograms.slice(
+      (currentProgramPage - 1) * programsPerPage,
+      currentProgramPage * programsPerPage
+    );
+
+    // Pagination controls for announcements
+    const handleAnnouncementPageChange = (page) => {
+      setCurrentAnnouncementPage(page);
+    };
+
+    // Pagination controls for programs
+    const handleProgramPageChange = (page) => {
+      setCurrentProgramPage(page);
+    };
+
+
         
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
@@ -359,7 +398,8 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      <main className={`flex-1 p-4 md:ml-64 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} overflow-y-auto`}>
+      <main className={`flex-1 p-4 md:ml-64 flex flex-col ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-white text-black'} overflow-y-auto`}
+      style={{ height: '100vh' }}>
       <div className="flex-1 flex flex-col">
           <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
             <div className="flex items-center">
@@ -397,15 +437,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-
-
-
         <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-left `}>Analytics</h3>
         <br></br>
         {/* User and Reports Summary */}
         <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-100 p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold">Total Users</h3>
+            <h3 className="text-lg font-semibold">Total Active Users</h3>
             <p className="text-2xl">{totalUsers}</p>
             </div>
             <div className="bg-blue-100 p-4 rounded-lg shadow">
@@ -420,161 +457,252 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold">Resolved Reports</h3>
             <p className="text-2xl">{resolvedReports}</p>
             </div>
-        </div>
-
-
-
-
-          {/* Announcements Card Container */}
-            <div className="flex justify-between items-center">
-              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Announcements</h3>
-              <select className="border border-gray-300 rounded p-1" value={filter} onChange={handleSortChange}>
-                <option value="all">All</option>
-                <option value="oldest">Oldest</option>
-                <option value="recent">Recent</option>
-                <option value="text-red-600">Red</option>
-                <option value="text-orange-600">Orange</option>
-                <option value="text-yellow-600">Yellow</option>
-                <option value="text-green-600">Green</option>
-                <option value="text-blue-600">Blue</option>
-              </select>
-            </div>
-
-            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
-              {filteredAnnouncements.length === 0 ? (
-                <div className="text-center text-gray-500">No announcements found</div>
-              ) : (
-                filteredAnnouncements.map((announcement) => (
-                  <div 
-                    key={announcement.id} 
-                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
-                    style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
-                  >
-                  {announcement.images ? (
-                    <img
-                      src={Array.isArray(announcement.images) ? announcement.images[0] : announcement.images}
-                      alt={announcement.title}
-                      onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }} // Fallback image
-                      className="h-24 w-full object-cover mb-2 rounded-lg"
-                    />
-                  ) : (
-                    <p className="text-gray-500 text-sm">No image available</p>
-                  )}
-
-
-                    <h4 className= 'font-semibold'>{announcement.title}</h4>
-                    <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
-                    onClick={() => handleShowMoreAnnouncement(announcement)}
-                  >Show More
-                  </button>
-                  </div>
-                ))
+            {/* Monthly Reports Section */}
+            <div className="monthly-reports-section">
+              <h3>Monthly Reports</h3>
+              {monthlyReportsData && (
+                <Line 
+                  data={monthlyReportsData}
+                  options={{
+                    responsive: true,
+                    scales: {
+                      y: {
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                />
               )}
             </div>
+        </div>
+
+        {/* Announcements Card Container */}
+        <div className="flex justify-between items-center">
+          <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Announcements</h3>
+          <select className={`border rounded p-1 ${
+          theme === 'dark' 
+        ? 'bg-gray-700 text-white border-gray-500' 
+        : 'bg-white text-black border-gray-300'
+        }`} value={filter} onChange={handleSortChange}>
+            <option value="all">All</option>
+            <option value="oldest">Oldest</option>
+            <option value="recent">Recent</option>
+            <option value="text-red-600">Red</option>
+            <option value="text-orange-600">Orange</option>
+            <option value="text-yellow-600">Yellow</option>
+            <option value="text-green-600">Green</option>
+            <option value="text-blue-600">Blue</option>
+          </select>
+        </div>
+
+        {/* Display paginated announcements */}
+        <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
+          {paginatedAnnouncements.length === 0 ? (
+            <div className="text-center text-gray-500">No announcements found</div>
+          ) : (
+            paginatedAnnouncements.map((announcement) => (
+              <div
+              key={announcement.id}
+              className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
+              style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }}
+            >
+              {announcement.images ? (
+                <img
+                  src={Array.isArray(announcement.images) ? announcement.images[0] : announcement.images}
+                  alt={announcement.title}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/150';
+                  }} // Fallback image
+                  className="h-24 w-full object-cover mb-2 rounded-lg"
+                />
+              ) : (
+                <p className="text-gray-500 text-sm">No image available</p>
+              )}
+              {/* Truncated Title */}
+              <h4
+                className="font-semibold text-sm"
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {announcement.title}
+              </h4>
+              <button
+                className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
+                onClick={() => handleShowMoreAnnouncement(announcement)}
+              >
+                Show More
+              </button>
+            </div>
+            
+
+            ))
+          )}
+        </div>
+
+        {/* Pagination for Announcements */}
+        <div className="flex justify-center mt-4">
+        {Array(Math.ceil(filteredAnnouncements.length / announcementsPerPage))
+          .fill()
+          .map((_, i) => (
+            <button
+              key={i}
+              className={`mx-1 px-2 py-1 rounded ${
+                currentAnnouncementPage === i + 1
+                  ? 'bg-maroon text-white' // Selected page styles
+                  : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' // Default styles with hover effect
+              }`}
+              onClick={() => setCurrentAnnouncementPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
+      </div>
+
+
             <br/>
               <hr/>
             <br/>
-                {/* Programs Card Container */}
+          {/* Programs Card Container */}
+          <div className="flex justify-between items-center">
+            <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Programs</h3>
+            {/* Programs Sorting Dropdown */}
+            <select
+              className={`border rounded p-1 ${
+                theme === 'dark' 
+              ? 'bg-gray-700 text-white border-gray-500' 
+              : 'bg-white text-black border-gray-300'
+              }`}
+              value={programFilter}
+              onChange={(e) => setProgramFilter(e.target.value)} // Ensure state updates correctly
+            >
+              <option value="all">All</option>
+              <option value="oldest">Oldest</option>
+              <option value="newest">Newest</option>
+            </select>
+          </div>
 
-            <div className="flex justify-between items-center">
-              <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Programs</h3>
-              {/* Programs Sorting Dropdown */}
-              <select
-                className="border border-gray-300 rounded p-1"
-                value={programFilter}
-                onChange={(e) => setProgramFilter(e.target.value)} // Ensure state updates correctly
+          {/* Display paginated programs */}
+          <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
+            {paginatedPrograms.length === 0 ? (
+              <div className="text-center text-gray-500">No programs found</div>
+            ) : (
+              paginatedPrograms.map((program) => (
+                <div
+                key={program.id}
+                className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
+                style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }}
               >
-                <option value="all">All</option>
-                <option value="oldest">Oldest</option>
-                <option value="newest">Newest</option>
-              </select>
+                {program.images ? (
+                  <img
+                    src={
+                      Array.isArray(program.images)
+                        ? program.images[0]
+                        : typeof program.images === 'string' && program.images.startsWith('[')
+                        ? JSON.parse(program.images)[0]
+                        : program.images
+                    }
+                    alt={program.who}
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/150';
+                    }}
+                    className="h-24 w-full object-cover mb-2 rounded-lg"
+                  />
+                ) : (
+                  <p className="text-gray-500 text-sm">No image available</p>
+                )}
+              
+                {/* Truncated Title */}
+                <h4
+                  className="font-semibold text-sm"
+                  style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {program.who}
+                </h4>
+              
+                {/* Show More Button with Space */}
+                <button
+                  className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
+                  onClick={() => handleShowMoreProgram(program)}
+                >
+                  Show More
+                </button>
+              </div>
+              ))
+            )}
+          </div>
 
-            </div>
-            <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
-            {filteredPrograms.length === 0 ? (
-                <div className="text-center text-gray-500">No programs found</div>
-              ) : (
-                filteredPrograms.map((program) => (
-                  <div 
-                    key={program.id} 
-                    className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} rounded-lg p-2 flex flex-col m-2`}
-                    style={{ backgroundColor: theme === 'dark' ? '#4a4a4a' : 'white', width: 'calc(50% - 16px)', maxWidth: '180px' }} 
-                  >
-                    {program.images ? (
-                      <img
-                        src={
-                          Array.isArray(program.images) // Handle array format
-                            ? program.images[0]
-                            : typeof program.images === 'string' && program.images.startsWith('[') // Parse JSON if needed
-                            ? JSON.parse(program.images)[0]
-                            : program.images // Assume it's a plain string URL
-                        }
-                        alt="Program"
-                        onError={(e) => { 
-                          e.target.src = 'https://via.placeholder.com/150'; // Fallback image if URL fails
-                        }}
-                        className="h-24 w-full object-cover mb-2 rounded-lg"
-                      />
-                    ) : (
-                      <p className="text-gray-500 text-sm">No image available</p>
-                    )}
-
-
-                  <h4 className="font-semibold">{program.who}</h4>
-                    <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
-                    onClick={() => handleShowMoreProgram(program)}
-                  >Show More
-                  </button>
-                  </div>
-                ))
-              )}    
-            </div>
-
+          {/* Pagination for Programs */}
+          <div className="flex justify-center mt-4">
+          {Array(Math.ceil(filteredPrograms.length / programsPerPage))
+            .fill()
+            .map((_, i) => (
+              <button
+                key={i}
+                className={`mx-1 px-2 py-1 rounded ${
+                  currentProgramPage === i + 1
+                    ? 'bg-maroon text-white' // Selected page styles
+                    : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' // Default styles with hover effect
+                }`}
+                onClick={() => setCurrentProgramPage(i + 1)}
+              >
+                {i + 1}
+              </button>
+            ))}
+        </div>
         </div>
 
-        
-
-     
       </main>
-         {/* Announcement Modal */}
-         {modalVisible && selectedAnnouncement && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg p-4 max-w-lg w-full">
-          <h2 className={`text-lg font-bold ${selectedAnnouncement.color}`}>{selectedAnnouncement.title}</h2>
-          <img
-            src={Array.isArray(selectedAnnouncement.images) ? selectedAnnouncement.images[0] : selectedAnnouncement.images}
-            alt={selectedAnnouncement.title}
-            onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }} // Fallback image
-            className="h-48 w-full object-cover mb-2"
-          />
-
-          <p className={`${selectedAnnouncement.color}`}>{selectedAnnouncement.content}</p>
-          <p className="text-gray-500 text-xs">{selectedAnnouncement.created_at}</p>
-          <button className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
-                    onClick={closeAnnouncementModal}>
-                      Close
-                  </button>
+        {/* Announcement Modal */}
+        {modalVisible && selectedAnnouncement && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-4 max-w-lg w-full">
+              <img
+                src={Array.isArray(selectedAnnouncement.images) ? selectedAnnouncement.images[0] : selectedAnnouncement.images}
+                alt={selectedAnnouncement.title}
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }} // Fallback image
+                className="h-48 w-full object-cover mb-2"
+              />
+              {/* Updated Title Styling */}
+              <h2
+                className="text-lg font-bold"
+                style={{ color: 'black' }} // Inline style to override theme-based styles
+              >
+                {selectedAnnouncement.title}
+              </h2>
+              <p className="text-gray-700">{selectedAnnouncement.content}</p>
+              <p className="text-gray-500 text-xs">{selectedAnnouncement.created_at}</p>
+              <button
+                className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
+                onClick={closeAnnouncementModal}
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
+
         {/* Modal for Programs */}
         {programsModalVisible && selectedProgram && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-4 max-w-lg w-full">
-              <h2 className={`text-lg font-bold`}>{selectedProgram.who}</h2>
-              
-              {/* Display the image */}
               {selectedProgram.images ? (
                 <img
                   src={
-                    Array.isArray(selectedProgram.images) // If images is an array
+                    Array.isArray(selectedProgram.images)
                       ? selectedProgram.images[0]
-                      : typeof selectedProgram.images === 'string' && selectedProgram.images.startsWith('[') // If JSON string
+                      : typeof selectedProgram.images === 'string' && selectedProgram.images.startsWith('[')
                       ? JSON.parse(selectedProgram.images)[0]
-                      : selectedProgram.images // Direct URL
+                      : selectedProgram.images
                   }
                   alt={selectedProgram.who}
-                  onError={(e) => { 
+                  onError={(e) => {
                     e.target.src = 'https://via.placeholder.com/150'; // Fallback image
                   }}
                   className="h-48 w-full object-cover mb-2 rounded-lg"
@@ -582,15 +710,16 @@ export default function Dashboard() {
               ) : (
                 <p className="text-gray-500 text-sm">No image available</p>
               )}
-
-              {/* Other program details */}
+              {/* Program Details */}
+              <h2 className="text-lg font-bold" style={{ color: 'black' }}>
+              {selectedProgram.who}
+              </h2>
               <p className="text-black">{selectedProgram.what}</p>
               <p className="text-gray-500 text-xs">When: {selectedProgram.when_date} at {selectedProgram.when_time}</p>
               <p className="text-gray-500 text-xs">Where: {selectedProgram.where}</p>
-              <p className="text-gray-500 text-xs">Who: {selectedProgram.who}</p>
-              
-              <button 
-                className={`border ${theme === 'dark' ? 'border-white' : 'border-maroon'} ${theme === 'dark' ? 'text-white' : 'text-maroon'} font-normal py-1 px-2 rounded mt-2 mx-auto block`}
+              {/* Close Button */}
+              <button
+                className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
                 onClick={closeProgramModal}
               >
                 Close
@@ -599,12 +728,10 @@ export default function Dashboard() {
           </div>
         )}
 
-
 <style jsx>{`
     .animate-shake {
       animation: shake 0.5s;
     }
-
     @keyframes shake {
       0% { transform: translate(1px, 1px) rotate(0deg); }
       10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -618,23 +745,19 @@ export default function Dashboard() {
       90% { transform: translate(1px, 2px) rotate(0deg); }
       100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
-
     @media (max-width: 768px) {
       .flex-col {
         flex-direction: column;
       }
-
       .flex-wrap {
         flex-wrap: wrap;
       }
-
       .overflow-hidden {
         overflow: hidden;
       }
     }
   `}
   </style>
-  
     </div>
   );
 }

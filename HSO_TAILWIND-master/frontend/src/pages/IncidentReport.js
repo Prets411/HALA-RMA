@@ -15,6 +15,9 @@ export default function IncidentReport() {
   const settingsMenuRef = useRef(null);
   const modalRef = useRef(null);
   const filterMenuRef = useRef(null);
+  const [subject, setSubject] = useState("");
+  
+  
 
   // State for search term and selected status
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,12 +70,14 @@ export default function IncidentReport() {
   const handleImageClick = (image) => {
     setSelectedImage(image);
     setShowImageModal(true);
+};
+
+  // Close the modal when clicked outside
+  const closeImageModal = () => {
+      setShowImageModal(false);
+      setSelectedImage(null);
   };
 
-  const closeImageModal = () => {
-    setShowImageModal(false);
-    setSelectedImage(null);
-  };
 
   const handleDepartmentChange = (index, value) => {
     const updatedReports = [...incidentReports];
@@ -83,31 +88,35 @@ export default function IncidentReport() {
   const handleSendReport = async (index) => {
     const selectedDepartment = incidentReports[index].selectedDepartment;
     const selectedReport = incidentReports[index];
-    
-    if (selectedDepartment) {
-      // Update the status and office locally
+
+    if (selectedDepartment && subject.trim() !== "") { // Ensure subject is not empty
+      // Update the status, office, and subject locally
       const updatedReports = [...incidentReports];
-      updatedReports[index].status = "Ongoing"; // Set status to "Ongoing"
-      updatedReports[index].office = selectedDepartment; // Set office to the selected department
+      updatedReports[index].status = "Ongoing";
+      updatedReports[index].office = selectedDepartment;
+      updatedReports[index].subject = subject; // Add subject here
       setIncidentReports(updatedReports);
-      
+
       try {
-        // Update the status and office in Supabase
+        // Update the status, office, and subject in Supabase
         const { error } = await supabase
           .from('incidents')
           .update({
-            status: 'Ongoing',  // Set the status to Ongoing
-            office: selectedDepartment,  // Set the office to the selected department
+            status: 'Ongoing', 
+            office: selectedDepartment, 
+            subject: subject, // Include subject in the update
           })
-          .eq('id', selectedReport.id);  // Ensure the correct report is updated
-  
+          .eq('id', selectedReport.id);
+
         if (error) throw error;
-  
-        alert(`Report ${selectedReport.id} sent to: ${selectedDepartment}`);
+
+        alert(`Report ${selectedReport.id} sent to: ${selectedDepartment} with subject: ${subject}`);
       } catch (err) {
         console.error('Error updating incident:', err);
         alert('There was an error sending the report.');
       }
+    } else {
+      alert('Please provide a subject for the report.');
     }
   };
 
@@ -122,6 +131,7 @@ export default function IncidentReport() {
   
     return matchesSearchTerm && matchesStatus;
   });
+  
 
   const handleStatusFilter = (status) => {
     setSelectedStatus(status);
@@ -133,6 +143,55 @@ export default function IncidentReport() {
     const sortedReports = [...incidentReports].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
     setIncidentReports(sortedReports);
   };
+
+  const [showFullDetails, setShowFullDetails] = useState({}); // Store visibility state for each report's details
+
+  const toggleDetails = (index) => {
+    setShowFullDetails((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
+  };
+
+
+// Function to handle Accept button click
+const handleAcceptReport = async (index) => {
+  const updatedReport = { ...incidentReports[index], status: 'Ongoing' };
+
+  // Update the status in Supabase
+  const { data, error } = await supabase
+    .from('incidents')
+    .update({ status: 'Ongoing' })
+    .eq('id', updatedReport.id);
+
+  if (error) {
+    console.error("Error updating report status:", error);
+  } else {
+    // Update local state with the new report status
+    const newReports = [...incidentReports];
+    newReports[index] = updatedReport;
+    setIncidentReports(newReports);
+  }
+};
+
+// Function to handle Reject button click
+const handleRejectReport = async (index) => {
+  const reportId = incidentReports[index].id;
+
+  // Delete the report from Supabase
+  const { data, error } = await supabase
+    .from('incidents')
+    .delete()
+    .eq('id', reportId);
+
+  if (error) {
+    console.error("Error deleting report:", error);
+  } else {
+    // Remove the report from local state
+    const newReports = incidentReports.filter((report) => report.id !== reportId);
+    setIncidentReports(newReports);
+  }
+};
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
@@ -194,133 +253,175 @@ export default function IncidentReport() {
       {/* Main content */}
       <main className={`flex-1 p-4 md:ml-64 flex flex-col ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
         {/* Search bar and user settings */}
-        <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
-          <div className="flex items-center">
-            <FaSearch className="w-4 h-4 mr-1 text-white" />
-            <input
-              type="text"
-              placeholder="Search"
-              className={`border-0 p-1 rounded-lg flex-grow focus:outline-none focus:ring focus:ring-gray-200 text-sm ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} // Update search term
-            />
-          </div>
-          <div className="flex items-center space-x-2 relative">
-            <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
-            <FaUserCircle 
-                className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                onClick={() => navigate('/profile')} // Navigate to profile on click
-            />
-            <div className="relative">
-              <FaCog 
-                className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
+          <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
+            <div className="flex items-center">
+              <FaSearch className="w-4 h-4 mr-1 text-white" />
+              <input
+                type="text"
+                placeholder="Search"
+                className={`border-0 p-1 rounded-lg flex-grow focus:outline-none focus:ring focus:ring-gray-200 text-sm ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)} 
               />
-              {showSettingsMenu && (
-                <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg z-10`} ref={settingsMenuRef}>
-                  <ul className="py-2">
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
-                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-white' : 'text-black'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
-                  </ul>
-                </div>
-              )}
             </div>
-            <FaBars className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer md:hidden" onClick={() => setIsOpen(!isOpen)} />
-          </div>
-        </div>
-
-        {/* Incident Reports Display */}
-        <div className={`bg-gray-50 p-4 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800' : ''}`}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon">Incident Reports</span>}</h2>
-            <div className="relative">
-              <button 
-                className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
-                onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
-              >
-                <FaSort className="mr-2" /> Sort/Filter
-              </button>
-              {showFilterMenu && (
-                <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-4 z-10`} ref={filterMenuRef}>
-                  <h4 className="text-lg font-semibold text-center">Filter by Status</h4>
-                  <br/>
-                  <div className="flex flex-col space-y-2">
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-gray-400 text-white' : 'bg-gray-200'} hover:bg-gray-200`} 
-                      onClick={() => handleStatusFilter("All")}
-                    >
-                      All
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
-                      onClick={() => handleStatusFilter("Open")}
-                    >
-                      Open
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Ongoing" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
-                      onClick={() => handleStatusFilter("Ongoing")}
-                    >
-                      Ongoing
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-green-400 text-white' : 'bg-gray-200'} hover:bg-green-200`} 
-                      onClick={() => handleStatusFilter("Resolved")}
-                    >
-                      Resolved
-                    </button>
+            <div className="flex items-center space-x-2 relative">
+              <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/Notification')} />
+              <FaUserCircle 
+                className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
+                onClick={() => navigate('/profile')} 
+              />
+              <div className="relative">
+                <FaCog 
+                  className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
+                  onClick={() => setShowSettingsMenu(!showSettingsMenu)} 
+                />
+                {showSettingsMenu && (
+                  <div className="absolute right-0 mt-2 bg-white shadow-md rounded-lg z-10" ref={settingsMenuRef}>
+                    <ul className="py-2">
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/settings')}>Settings</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={() => navigate('/help')}>Help</li>
+                      <li className={`px-4 py-2 ${theme === 'dark' ? 'text-black' : 'text-gray-800'} hover:bg-gray-200 cursor-pointer`} onClick={handleLogout}>Logout</li>
+                    </ul>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+              <FaBars className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer md:hidden" onClick={() => setIsOpen(!isOpen)} />
             </div>
           </div>
-          <div className="overflow-y-scroll flex-grow" style={{ maxHeight: '600px' }}>
-            {filteredReports.length > 0 ? (
-              filteredReports.map((report, index) => (
-                <div key={report.id} className={`border border-blue-300 p-4 mb-4 rounded shadow hover:shadow-lg transition-shadow duration-200 flex justify-between items-start ${theme === 'dark' ? 'bg-gray-700' : ''}`}>
-                  <div className="flex flex-col">
-                    <img 
-                      src={report.image} 
-                      alt="Incident" 
-                      className="w-20 h-20 object-cover cursor-pointer rounded" 
-                      onClick={() => handleImageClick(report.image)} 
-                    />
-                    <p className="mt-1 font-semibold text-sm">Report Number: {report.id}</p>
-                    <p className="text-xs">Location: {report.location}</p>
-                    <p className="text-xs">Date: {report.date_observed}</p>
-                    <p className="text-xs">Time: {report.time_observed}</p>
-                    <p className="text-xs">Description: {report.description}</p>
-                    <p className="mt-1 font-semibold text-xs">Status: {report.status}</p> {/* Display Status */}
+
+          {/* Incident reports */}
+          <div className="mt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon">Incident Reports</span>}</h2>
+              <div className="relative">
+                <button 
+                  className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
+                  onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
+                >
+                  <FaSort className="mr-2" /> Sort/Filter
+                </button>
+                {showFilterMenu && (
+                  <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-4 z-10`} ref={filterMenuRef}>
+                    <h4 className="text-lg font-semibold text-center">Filter by Status</h4>
+                    <br/>
+                    <div className="flex flex-col space-y-2">
+                      <button 
+                        className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-gray-400 text-white' : 'bg-gray-200'} hover:bg-gray-200`} 
+                        onClick={() => handleStatusFilter("All")}
+                      >
+                        All
+                      </button>
+                      <button 
+                        className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
+                        onClick={() => handleStatusFilter("Open")}
+                      >
+                        Open
+                      </button>
+                      <button 
+                        className={`w-full px-4 py-2 rounded ${selectedStatus === "Ongoing" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
+                        onClick={() => handleStatusFilter("Ongoing")}
+                      >
+                        Ongoing
+                      </button>
+                      <button 
+                        className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-green-400 text-white' : 'bg-gray-200'} hover:bg-green-200`} 
+                        onClick={() => handleStatusFilter("Resolved")}
+                      >
+                        Resolved
+                      </button>
+                      <button 
+                        className={`w-full px-4 py-2 rounded ${selectedStatus === "Sent" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
+                        onClick={() => handleStatusFilter("Sent")}
+                      >
+                        Sent
+                      </button>
+                    </div>
                   </div>
-                  {/* Dropdown for GSD and MDS */}
-                  <div className="flex flex-col ml-2">
-                    <select 
-                      className={`select select-primary w-40 max-w-xs py-1 border border-gray-300 shadow-md rounded focus:outline-none focus:ring-2 focus:ring-orange-600 text-xs ${theme === 'dark' ? 'bg-gray-600 text-white' : ''}`} // Made text smaller
-                      value={report.selectedDepartment} 
-                      onChange={(e) => handleDepartmentChange(index, e.target.value)}
-                    >
-                      <option value="" disabled>Select Department</option>
-                      <option>General Services Department</option>
-                      <option>Medical and Dental Services</option>
-                    </select>
-                    <button 
-                      className={`mt-2 w-full px-2 py-1 rounded ${report.selectedDepartment ? 'bg-maroon text-white' : 'bg-gray-300 text-gray-600'}`} 
-                      onClick={() => handleSendReport(index)} 
-                      disabled={!report.selectedDepartment} // Disable button if no department is selected
-                    >
-                      Send Report
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {filteredReports.map((report, index) => (
+                <div key={report.id} className={`bg-white shadow-md rounded-md p-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Report Number: {report.id}</h3>
+                    <p><strong>Location:</strong> {report.location}</p>
+                    <button onClick={() => toggleDetails(index)} className="text-sm text-gray-500">
+                      {showFullDetails[index] ? "Hide Details" : "Show Details"}
                     </button>
                   </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-600">No incident reports available.</p>
-            )}
-          </div>
-        </div>
+                  {showFullDetails[index] && (
+                    <div className="mt-2 text-sm text-gray-700">
+                      <img 
+                        src={report.image} 
+                        alt="Incident" 
+                        className="w-20 h-20 object-cover cursor-pointer rounded" 
+                        onClick={() => handleImageClick(report.image)} 
+                      />
+                      <p><strong>Location:</strong> {report.location}</p>
+                      <p><strong>Description:</strong> {report.description}</p>
+                      <p><strong>Status:</strong> {report.status}</p>
+                      {report.status === 'Resolved' && report.action_taken && (
+                        <p><strong>Action Taken:</strong> {report.action_taken}</p>
+                      )}
 
-        {/* Image Modal */}
+                      {report.status !== 'Sent' && (
+                        <>
+                          <div className="flex mt-2">
+                            <input
+                              type="text"
+                              placeholder="Subject"
+                              value={subject}
+                              onChange={(e) => setSubject(e.target.value)}
+                              className="w-full p-2 border rounded-md"
+                            />
+                          </div>
+                          <div className="flex mt-2 space-x-2">
+                            <select
+                              value={report.selectedDepartment || ""}
+                              onChange={(e) => handleDepartmentChange(index, e.target.value)}
+                              className="p-2 border rounded-md"
+                            >
+                              <option value="">Select Department</option>
+                              <option value="General Services Department">General Services Department</option>
+                              <option value="Medical and Dental Services">Medical and Dental Services</option>
+                            </select>
+                            <button
+                              onClick={() => handleSendReport(index)}
+                              className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                            >
+                              Send Report
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                  {report.status === 'Sent' && (
+                  <div className="flex mt-2 space-x-2">
+                    <button
+                      onClick={() => handleAcceptReport(index)}
+                      className="px-4 py-2 bg-green-500 text-white rounded-md"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleRejectReport(index)}
+                      className="px-4 py-2 bg-red-500 text-white rounded-md"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+
+        {/* Modal for showing image */}
         {showImageModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`} ref={modalRef}>

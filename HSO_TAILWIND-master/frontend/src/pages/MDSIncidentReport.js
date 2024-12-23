@@ -15,6 +15,7 @@ export default function MIncidentReport() {
   const settingsMenuRef = useRef(null);
   const modalRef = useRef(null);
   const filterMenuRef = useRef(null);
+  const [action_taken, setActionTaken] = useState("");
 
   // State for search term and selected status
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,7 +31,6 @@ export default function MIncidentReport() {
         const { data, error } = await supabase
           .from('incidents')
           .select('*')
-          .eq('status', 'Ongoing') // Only fetch reports with status 'Ongoing'
           .eq('office', 'Medical and Dental Services'); // Only fetch reports for 'General Services Department'
   
         if (error) throw error;
@@ -45,7 +45,7 @@ export default function MIncidentReport() {
   }, []);
   
 
-  useEffect(() => {
+ useEffect(() => {
     const handleClickOutside = (event) => {
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
         setShowSettingsMenu(false);
@@ -71,12 +71,14 @@ export default function MIncidentReport() {
   const handleImageClick = (image) => {
     setSelectedImage(image);
     setShowImageModal(true);
+};
+
+  // Close the modal when clicked outside
+  const closeImageModal = () => {
+      setShowImageModal(false);
+      setSelectedImage(null);
   };
 
-  const closeImageModal = () => {
-    setShowImageModal(false);
-    setSelectedImage(null);
-  };
 
   const handleDepartmentChange = (index, value) => {
     const updatedReports = [...incidentReports];
@@ -84,28 +86,38 @@ export default function MIncidentReport() {
     setIncidentReports(updatedReports);
   };
 
-  const handleSendReport = async (reportId) => {
-    try {
-      // Update the incident's status to 'Resolved' and office to 'Health and Safety Office'
-      const { error } = await supabase
-        .from('incidents')
-        .update({
-          status: 'Resolved',
-          office: 'Health and Safety Office',
-        })
-        .eq('id', reportId);
+  const handleSendReport = async (index) => {
+    const selectedDepartment = incidentReports[index].selectedDepartment;
+    const selectedReport = incidentReports[index];
 
-      if (error) throw error;
+    if (selectedDepartment && action_taken.trim() !== "") { // Ensure action_taken is not empty
+      // Update the status, office, and action_taken locally
+      const updatedReports = [...incidentReports];
+      updatedReports[index].status = "Ongoing";
+      updatedReports[index].office = selectedDepartment;
+      updatedReports[index].action_taken = action_taken; // Add action_taken here
+      setIncidentReports(updatedReports);
 
-      // Update the local state to reflect the change
-      setIncidentReports(prevReports =>
-        prevReports.filter(report => report.id !== reportId) // Remove the resolved report
-      );
+      try {
+        // Update the status, office, and action_taken in Supabase
+        const { error } = await supabase
+          .from('incidents')
+          .update({
+            status: 'Resolved', 
+            office: selectedDepartment, 
+            action_taken: action_taken, // Include action_taken in the update
+          })
+          .eq('id', selectedReport.id);
 
-      alert(`Report ${reportId} marked as Resolved.`);
-    } catch (err) {
-      console.error('Error updating incident report:', err);
-      alert('Error updating the report. Please try again.');
+        if (error) throw error;
+
+        alert(`Report ${selectedReport.id} sent to: ${selectedDepartment} with action_taken: ${action_taken}`);
+      } catch (err) {
+        console.error('Error updating incident:', err);
+        alert('There was an error sending the report.');
+      }
+    } else {
+      alert('Please provide a action_taken for the report.');
     }
   };
 
@@ -130,6 +142,15 @@ export default function MIncidentReport() {
     // Implement sorting logic here
     const sortedReports = [...incidentReports].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
     setIncidentReports(sortedReports);
+  };
+
+  const [showFullDetails, setShowFullDetails] = useState({}); // Store visibility state for each report's details
+
+  const toggleDetails = (index) => {
+    setShowFullDetails((prevState) => ({
+      ...prevState,
+      [index]: !prevState[index],
+    }));
   };
 
   return (
@@ -215,87 +236,108 @@ export default function MIncidentReport() {
           </div>
         </div>
 
-        {/* Incident Reports Display */}
-        <div className={`bg-gray-50 p-4 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800' : ''}`}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon">Incident Reports</span>}</h2>
-            <div className="relative">
-              <button 
-                className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
-                onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
-              >
-                <FaSort className="mr-2" /> Sort/Filter
-              </button>
-              {showFilterMenu && (
-                <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-4 z-10`} ref={filterMenuRef}>
-                  <h4 className="text-lg font-semibold text-center">Filter by Status</h4>
-                  <br/>
-                  <div className="flex flex-col space-y-2">
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-gray-400 text-white' : 'bg-gray-200'} hover:bg-gray-200`} 
-                      onClick={() => handleStatusFilter("All")}
-                    >
-                      All
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
-                      onClick={() => handleStatusFilter("Open")}
-                    >
-                      Open
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Ongoing" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
-                      onClick={() => handleStatusFilter("Ongoing")}
-                    >
-                      Ongoing
-                    </button>
-                    <button 
-                      className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-green-400 text-white' : 'bg-gray-200'} hover:bg-green-200`} 
-                      onClick={() => handleStatusFilter("Resolved")}
-                    >
-                      Resolved
-                    </button>
-                  </div>
+
+        {/* Incident reports */}
+        <div className="mt-6">
+                   <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon">Incident Reports</span>}</h2>
+                     <div className="relative">
+                       <button 
+                         className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
+                         onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
+                       >
+                         <FaSort className="mr-2" /> Sort/Filter
+                       </button>
+                       {showFilterMenu && (
+                         <div className={`absolute right-0 mt-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-lg p-4 z-10`} ref={filterMenuRef}>
+                           <h4 className="text-lg font-semibold text-center">Filter by Status</h4>
+                           <br/>
+                           <div className="flex flex-col space-y-2">
+                             <button 
+                               className={`w-full px-4 py-2 rounded ${selectedStatus === "All" ? 'bg-gray-400 text-white' : 'bg-gray-200'} hover:bg-gray-200`} 
+                               onClick={() => handleStatusFilter("All")}
+                             >
+                               All
+                             </button>
+                             <button 
+                               className={`w-full px-4 py-2 rounded ${selectedStatus === "Open" ? 'bg-blue-400 text-white' : 'bg-gray-200'} hover:bg-blue-200`} 
+                               onClick={() => handleStatusFilter("Open")}
+                             >
+                               Open
+                             </button>
+                             <button 
+                               className={`w-full px-4 py-2 rounded ${selectedStatus === "Ongoing" ? 'bg-orange-400 text-white' : 'bg-gray-200'} hover:bg-orange-200`} 
+                               onClick={() => handleStatusFilter("Ongoing")}
+                             >
+                               Ongoing
+                             </button>
+                             <button 
+                               className={`w-full px-4 py-2 rounded ${selectedStatus === "Resolved" ? 'bg-green-400 text-white' : 'bg-gray-200'} hover:bg-green-200`} 
+                               onClick={() => handleStatusFilter("Resolved")}
+                             >
+                               Resolved
+                             </button>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+          <div className="space-y-4">
+            {filteredReports.map((report, index) => (
+              <div key={report.id} className={`bg-white shadow-md rounded-md p-4 ${theme === 'dark' ? 'border-gray-700' : 'border-gray-300'}`}>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Report Number: {report.id}</h3>
+                  <p><strong>Location:</strong> {report.location}</p>
+                  <button onClick={() => toggleDetails(index)} className="text-sm text-gray-500">
+                    {showFullDetails[index] ? "Hide Details" : "Show Details"}
+                  </button>
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="overflow-y-scroll flex-grow" style={{ maxHeight: '600px' }}>
-            {filteredReports.length > 0 ? (
-              filteredReports.map((report, index) => (
-                <div key={report.id} className={`border border-blue-300 p-4 mb-4 rounded shadow hover:shadow-lg transition-shadow duration-200 flex justify-between items-start ${theme === 'dark' ? 'bg-gray-700' : ''}`}>
-                  <div className="flex flex-col">
+                {showFullDetails[index] && (
+                  <div className="mt-2 text-sm text-gray-700">
                     <img 
                       src={report.image} 
                       alt="Incident" 
                       className="w-20 h-20 object-cover cursor-pointer rounded" 
                       onClick={() => handleImageClick(report.image)} 
                     />
-                    <p className="mt-1 font-semibold text-sm">Report Number: {report.id}</p>
-                    <p className="text-xs">Location: {report.location}</p>
-                    <p className="text-xs">Date: {report.date_observed}</p>
-                    <p className="text-xs">Time: {report.time_observed}</p>
-                    <p className="text-xs">Description: {report.description}</p>
-                    <p className="mt-1 font-semibold text-xs">Status: {report.status}</p> {/* Display Status */}
+                    <p><strong>Subject:</strong> {report.subject}</p>
+                    <p><strong>Location:</strong> {report.location}</p>
+                    <p><strong>Description:</strong> {report.description}</p>
+                    <p><strong>Status:</strong> {report.status}</p>
+                    <div className="flex mt-2">
+                      <input
+                        type="text"
+                        placeholder="Action Taken"
+                        value={action_taken}
+                        onChange={(e) => setActionTaken(e.target.value)}
+                        className="w-full p-2 border rounded-md"
+                      />
+                    </div>
+                    <div className="flex mt-2 space-x-2">
+                      <select
+                        value={report.selectedDepartment || ""}
+                        onChange={(e) => handleDepartmentChange(index, e.target.value)}
+                        className="p-2 border rounded-md"
+                      >
+                        <option value="">Select Department</option>
+                        <option value="Department A">Health and Safety Office</option>
+
+                      </select>
+                      <button
+                        onClick={() => handleSendReport(index)}
+                        className="px-4 py-2 bg-maroon text-white py-2 px-4 hover:bg-yellow-500 hover:text-white transition-all mt-4 rounded-md"
+                      >
+                        Send Report
+                      </button>
+                    </div>
                   </div>
-                  {/* Dropdown for GSD and MDS */}
-                  <div className="flex flex-col ml-2">
-                  <button
-                    onClick={() => handleSendReport(report.id)}
-                    className={`mt-2 w-full px-2 py-1 rounded ${report.selectedDepartment ? 'bg-maroon text-white' : 'bg-gray-300 text-gray-600'}`} 
-                  >
-                    Send Report
-                  </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-center text-gray-600">No incident reports available.</p>
-            )}
+                )}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Image Modal */}
+        {/* Modal for showing image */}
         {showImageModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`} ref={modalRef}>
