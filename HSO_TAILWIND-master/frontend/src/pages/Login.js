@@ -11,7 +11,6 @@ export default function Login() {
   const [otp, setOtp] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-
   useEffect(() => {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -42,70 +41,68 @@ export default function Login() {
     return () => clearInterval(shakeInterval);
   }, []);
 
+  const handleNavClick = (path) => {
+    navigate(`/${path}`);
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-  
-    // Check if the email exists in the 'Account' table
+
     const { data, error } = await supabase
       .from('Account')
       .select('email')
       .eq('email', email)
       .single();
-  
+
     if (error || !data) {
       setErrorMessage('This email is not registered. Please check the email.');
       return;
     }
-  
-    // If email exists, proceed to send OTP
+
     const { otpError } = await supabase.auth.signInWithOtp({ email });
-  
+
     if (otpError) {
       console.error('Error sending OTP:', otpError.message);
       setErrorMessage('Error sending OTP, please try again.');
     } else {
       setOtpSent(true);
-      setErrorMessage(''); // Clear any previous error messages
+      setErrorMessage('');
     }
   };
-  
 
   const handleOtpSubmit = async (e, otp) => {
     e.preventDefault();
     try {
-      // Verify OTP with Supabase
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: 'email',
       });
-  
+
       if (error) {
         console.error('Error verifying OTP:', error.message);
         setErrorMessage('Invalid OTP. Please try again.');
         return;
       }
-  
-      // Fetch user_type for the authenticated user
+
       const { data, error: userError } = await supabase
         .from('Account')
         .select('user_type')
         .eq('email', email)
         .single();
-  
+
       if (userError || !data) {
         console.error('Error fetching user data:', userError?.message);
         setErrorMessage('Error fetching user data. Please try again.');
         return;
       }
-  
-      // Navigate based on user_type
+
       if (data.user_type === 'Admin') {
         navigate('/dashboard');
       } else if (data.user_type === 'GSD') {
         navigate('/gsd');
-      } else if (data.user_type === 'MDS') {618951
-        navigate('/mds'); // Navigate to '/mds' for MDS user_type
+      } else if (data.user_type === 'MDS') {
+        navigate('/mds');
       } else {
         setErrorMessage('Unauthorized access: User not allowed.');
       }
@@ -114,13 +111,11 @@ export default function Login() {
       setErrorMessage('An unexpected error occurred. Please try again.');
     }
   };
-  
-  
+
   const goBack = () => {
-    setOtpSent(false);  
-    setErrorMessage(''); 
+    setOtpSent(false);
+    setErrorMessage('');
   };
-  
 
   const navLinkStyle = (isActive) => ({
     color: isActive ? 'gold' : 'maroon',
