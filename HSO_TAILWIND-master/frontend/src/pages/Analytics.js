@@ -26,6 +26,8 @@ const Analytics = () => {
   const [resolvedReports, setResolvedReports] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
   const [openReports, setOpenReports] = useState(0); 
+  const [monthlyReportCounts, setMonthlyReportCounts] = useState([]);
+  const [reportsTimelineData, setReportsTimelineData] = useState({});
   
 
 

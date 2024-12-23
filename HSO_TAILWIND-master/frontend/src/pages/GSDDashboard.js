@@ -21,6 +21,8 @@ const navigate = useNavigate();
   const [resolvedReports, setResolvedReports] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
   const [openReports, setOpenReports] = useState(0); 
+  const [monthlyReportCounts, setMonthlyReportCounts] = useState([]);
+  const [reportsTimelineData, setReportsTimelineData] = useState({});
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -186,94 +188,92 @@ const navigate = useNavigate();
     return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
   });
 
-      useEffect(() => {
-          fetchUserTypes();
-          fetchIncidentStatus();
-        }, []);
-      
-        const fetchUserTypes = async () => {
-          try {
-            const { data, error } = await supabase.from("account").select("user_type");
-            if (error) throw error;
-            setTotalUsers(data.length);
-          } catch (error) {
-            console.error("Error fetching user types:", error.message);
-          }
-        };
-      
-        const fetchIncidentStatus = async () => {
-          try {
-            const { data, error } = await supabase.from("incidents").select("status, created_at");
-            if (error) throw error;
-      
-            const resolved = data.filter((item) => item.status === "Resolved").length;
-            const pending = data.filter((item) => item.status === "Ongoing").length;
-            const open = data.filter((item) => item.status === "Open").length;
-      
-            setResolvedReports(resolved);
-            setPendingReports(pending);
-            setOpenReports(open);
-      
-            // Process data for monthly reports
-            const monthlyCounts = processMonthlyData(data);
-            setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
-      
-            // Update Chart Data
-            prepareChartData(resolved, pending, open, monthlyCounts);
-          } catch (error) {
-            console.error("Error fetching incidents:", error.message);
-          }
-        };
-      
-        // Function to process the monthly data
-        const processMonthlyData = (data) => {
-          const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
-      
-          data.forEach((incident) => {
-            const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
-            monthlyCounts[month] += 1; // Increment count for that month
-          });
-      
-          return monthlyCounts; // Returns an array with counts for each month
-        };
-              
-          const prepareChartData = (resolved, pending, open, monthlyCounts) => {
-              setReportsTimelineData({
-                labels: ["2021", "2022", "2023"],
-                datasets: [
-                  {
-                    label: "Reports",
-                    data: [1, 3, resolved + pending + open],  // Example for reports timeline
-                    backgroundColor: "rgba(75,192,192,0.4)",
-                    borderColor: "rgba(75,192,192,1)",
-                  },
-                ],
-              });
-      
-          setMonthlyReportsData({
-            labels: [
-              "January", "February", "March", "April", "May", "June", 
-              "July", "August", "September", "October", "November", "December"
-            ],
-            datasets: [
-              {
-                  label: "Monthly Reports",
-                  data: monthlyCounts, // Use the monthlyCounts data
-                  backgroundColor: "rgba(75, 192, 192, 0.5)",
-              },
-              {
-                  label: "Pending Reports",
-                  data: [0, pending, 0],
-                  backgroundColor: "rgba(255, 99, 132, 0.5)",
-              },
-              {
-                  label: "Resolved Reports",
-                  data: [0, resolved, 0],
-                  backgroundColor: "rgba(75, 192, 192, 0.5)",
-              },
-            ],
-          });
-        };
+  // Fetch the total user types
+  const fetchUserTypes = async () => {
+    try {
+      const { data, error } = await supabase.from("account").select("user_type");
+      if (error) throw error;
+      setTotalUsers(data.length);
+    } catch (error) {
+      console.error("Error fetching user types:", error.message);
+    }
+  };
+
+  // Fetch the status of incidents and report counts
+  const fetchIncidentStatus = async () => {
+    try {
+      const { data, error } = await supabase.from("incidents").select("status, created_at");
+      if (error) throw error;
+
+      const resolved = data.filter((item) => item.status === "Resolved").length;
+      const pending = data.filter((item) => item.status === "Ongoing").length;
+      const open = data.filter((item) => item.status === "Open").length;
+
+      setResolvedReports(resolved);
+      setPendingReports(pending);
+      setOpenReports(open);
+
+      // Process data for monthly reports
+      const monthlyCounts = processMonthlyData(data);
+      setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
+
+      // Update Chart Data
+      prepareChartData(resolved, pending, open, monthlyCounts);
+    } catch (error) {
+      console.error("Error fetching incidents:", error.message);
+    }
+  };
+
+  // Function to process the monthly data
+  const processMonthlyData = (data) => {
+    const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
+
+    data.forEach((incident) => {
+      const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
+      monthlyCounts[month] += 1; // Increment count for that month
+    });
+
+    return monthlyCounts; // Returns an array with counts for each month
+  };
+
+  // Function to prepare chart data (for Reports timeline)
+  const prepareChartData = (resolved, pending, open, monthlyCounts) => {
+    setReportsTimelineData({
+      labels: ["2021", "2022", "2023"],
+      datasets: [
+        {
+          label: "Reports",
+          data: [1, 3, resolved + pending + open],  // Example for reports timeline
+          backgroundColor: "rgba(75,192,192,0.4)",
+          borderColor: "rgba(75,192,192,1)",
+        },
+      ],
+    });
+
+    setMonthlyReportsData({
+      labels: [
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
+      ],
+      datasets: [
+        {
+          label: "Monthly Reports",
+          data: monthlyCounts, // Use the monthlyCounts data
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+        },
+        {
+          label: "Pending Reports",
+          data: [0, pending, 0],
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+        },
+        {
+          label: "Resolved Reports",
+          data: [0, resolved, 0],
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+        },
+      ],
+    });
+  };
   
     const [currentAnnouncementPage, setCurrentAnnouncementPage] = useState(1);
     const announcementsPerPage = 8;
