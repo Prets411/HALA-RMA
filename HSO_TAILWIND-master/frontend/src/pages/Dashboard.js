@@ -22,6 +22,8 @@ export default function Dashboard() {
   const [resolvedReports, setResolvedReports] = useState(0);
   const [pendingReports, setPendingReports] = useState(0);
   const [openReports, setOpenReports] = useState(0); 
+  const [setMonthlyReportCounts, setReportsTimelineData] = useState([]);
+
 
   useEffect(() => {
     const fetchAnnouncements = async () => {

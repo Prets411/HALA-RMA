@@ -3,5 +3,8 @@
     "@supabase/supabase-js": "^2.46.2",
     "chart.js": "^3.9.1",
     "react-chartjs-2": "^4.3.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }
