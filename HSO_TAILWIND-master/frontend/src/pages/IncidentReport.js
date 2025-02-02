@@ -389,7 +389,7 @@ const handleRejectReport = async (index) => {
                             </select>
                             <button
                               onClick={() => handleSendReport(index)}
-                              className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                              className="px-4 py-2 bg-maroon text-white py-2 px-4 hover:bg-yellow-500 hover:text-white transition-all mt-4 rounded-md"
                             >
                               Send Report
                             </button>

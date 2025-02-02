@@ -2,7 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaUserCircle, FaSearch, FaCog, FaBell, FaFileAlt, FaClipboardList, FaPaintBrush, FaExclamationCircle, FaBars, FaChartBar, FaChartLine } from 'react-icons/fa'; 
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line } from 'react-chartjs-2'; 
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -60,7 +71,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchUserTypes();
-    fetchIncidentStatus();  // This line was missing the definition of fetchIncidentStatus
+    fetchIncidentStatus();  
 
   }, []);
 
@@ -207,53 +218,74 @@ export default function Dashboard() {
     }
   };
 
-  // Fetch the status of incidents and report counts
   const fetchIncidentStatus = async () => {
     try {
-      const { data, error } = await supabase.from("incidents").select("status, created_at");
+      const { data, error } = await supabase
+        .from("incidents")
+        .select("status, created_at");
+  
       if (error) throw error;
-
-      const resolved = data.filter((item) => item.status === "Resolved").length;
-      const pending = data.filter((item) => item.status === "Ongoing").length;
-      const open = data.filter((item) => item.status === "Open").length;
-
-      setResolvedReports(resolved);
-      setPendingReports(pending);
-      setOpenReports(open);
-
-      // Process data for monthly reports
+  
+      // Aggregate data by status and month
       const monthlyCounts = processMonthlyData(data);
-      setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
-
-      // Update Chart Data
-      prepareChartData(resolved, pending, open, monthlyCounts);
+  
+      // Set state for summary numbers
+      setResolvedReports(monthlyCounts.resolved.reduce((a, b) => a + b, 0));
+      setPendingReports(monthlyCounts.pending.reduce((a, b) => a + b, 0));
+      setOpenReports(monthlyCounts.open.reduce((a, b) => a + b, 0));
+  
+      // Prepare data for the chart
+      prepareChartData(monthlyCounts);
     } catch (error) {
       console.error("Error fetching incidents:", error.message);
     }
   };
 
-  // Function to process the monthly data
+  
   const processMonthlyData = (data) => {
-    const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
-
+    // Initialize empty arrays for each status across 12 months
+    const resolved = Array(12).fill(0);
+    const pending = Array(12).fill(0);
+    const open = Array(12).fill(0);
+  
     data.forEach((incident) => {
-      const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
-      monthlyCounts[month] += 1; // Increment count for that month
+      const month = new Date(incident.created_at).getMonth(); // 0-indexed months
+  
+      if (incident.status === "Resolved") resolved[month]++;
+      if (incident.status === "Ongoing") pending[month]++;
+      if (incident.status === "Open") open[month]++;
     });
-
-    return monthlyCounts; // Returns an array with counts for each month
+  
+    return { resolved, pending, open };
   };
 
-  // Function to prepare chart data (for Reports timeline)
-  const prepareChartData = (resolved, pending, open, monthlyCounts) => {
-    setReportsTimelineData({
-      labels: ["2021", "2022", "2023"],
+  const prepareChartData = ({ resolved, pending, open }) => {
+    setMonthlyReportsData({
+      labels: [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+      ],
       datasets: [
         {
-          label: "Reports",
-          data: [1, 3, resolved + pending + open],  // Example for reports timeline
-          backgroundColor: "rgba(75,192,192,0.4)",
-          borderColor: "rgba(75,192,192,1)",
+          label: "Resolved Reports",
+          data: resolved,
+          backgroundColor: "rgba(75, 192, 192, 0.5)",
+          borderColor: "rgba(75, 192, 192, 1)",
+          fill: true,
+        },
+        {
+          label: "Ongoing Reports",
+          data: pending,
+          backgroundColor: "rgba(255, 206, 86, 0.5)",
+          borderColor: "rgba(255, 206, 86, 1)",
+          fill: true,
+        },
+        {
+          label: "Open Reports",
+          data: open,
+          backgroundColor: "rgba(255, 99, 132, 0.5)",
+          borderColor: "rgba(255, 99, 132, 1)",
+          fill: true,
         },
       ],
     });
@@ -266,7 +298,7 @@ export default function Dashboard() {
       datasets: [
         {
           label: "Monthly Reports",
-          data: monthlyCounts, // Use the monthlyCounts data
+          data: monthlyCounts, 
           backgroundColor: "rgba(75, 192, 192, 0.5)",
         },
         {
@@ -459,22 +491,23 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold">Resolved Reports</h3>
             <p className="text-2xl">{resolvedReports}</p>
             </div>
+
             {/* Monthly Reports Section */}
             <div className="monthly-reports-section">
-              <h3>Monthly Reports</h3>
-              {monthlyReportsData && (
+              {monthlyReportsData && monthlyReportsData.datasets && (
                 <Line 
-                  data={monthlyReportsData}
-                  options={{
-                    responsive: true,
-                    scales: {
-                      y: {
-                        beginAtZero: true,
-                      },
-                    },
-                  }}
+                    data={monthlyReportsData}
+                    options={{
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'top' },
+                            title: { display: true, text: 'Monthly Reports' },
+                        },
+                        scales: { y: { beginAtZero: true } }
+                    }}
+                    style={{ width: '100%', height: '400px' }}
                 />
-              )}
+            )}
             </div>
         </div>
 
