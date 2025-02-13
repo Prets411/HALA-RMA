@@ -16,22 +16,18 @@ export default function MIncidentReport() {
   const modalRef = useRef(null);
   const filterMenuRef = useRef(null);
   const [action_taken, setActionTaken] = useState("");
-
-  // State for search term and selected status
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("All"); // Default is All
-
-  // State for incident reports
+  const [selectedStatus, setSelectedStatus] = useState("All"); 
   const [incidentReports, setIncidentReports] = useState([]);
 
   useEffect(() => {
-    // Fetch incident reports from Supabase with filters
+
     const fetchReports = async () => {
       try {
         const { data, error } = await supabase
           .from('incidents')
           .select('*')
-          .eq('office', 'Medical and Dental Services'); // Only fetch reports for 'General Services Department'
+          .eq('office', 'Medical and Dental Services'); 
   
         if (error) throw error;
   
@@ -51,10 +47,10 @@ export default function MIncidentReport() {
         setShowSettingsMenu(false);
       }
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        closeImageModal(); // Close modal if clicked outside
+        closeImageModal(); 
       }
       if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
-        setShowFilterMenu(false); // Close filter menu if clicked outside
+        setShowFilterMenu(false); 
       }
     };
 
@@ -71,9 +67,8 @@ export default function MIncidentReport() {
   const handleImageClick = (image) => {
     setSelectedImage(image);
     setShowImageModal(true);
-};
+  };
 
-  // Close the modal when clicked outside
   const closeImageModal = () => {
       setShowImageModal(false);
       setSelectedImage(null);
@@ -90,22 +85,21 @@ export default function MIncidentReport() {
     const selectedDepartment = incidentReports[index].selectedDepartment;
     const selectedReport = incidentReports[index];
 
-    if (selectedDepartment && action_taken.trim() !== "") { // Ensure action_taken is not empty
-      // Update the status, office, and action_taken locally
+    if (selectedDepartment && action_taken.trim() !== "") {
       const updatedReports = [...incidentReports];
       updatedReports[index].status = "Ongoing";
       updatedReports[index].office = selectedDepartment;
-      updatedReports[index].action_taken = action_taken; // Add action_taken here
+      updatedReports[index].action_taken = action_taken;
       setIncidentReports(updatedReports);
 
       try {
-        // Update the status, office, and action_taken in Supabase
+
         const { error } = await supabase
           .from('incidents')
           .update({
             status: 'Resolved', 
             office: selectedDepartment, 
-            action_taken: action_taken, // Include action_taken in the update
+            action_taken: action_taken,
           })
           .eq('id', selectedReport.id);
 
@@ -122,7 +116,6 @@ export default function MIncidentReport() {
   };
 
   const filteredReports = incidentReports.filter(report => {
-    // Ensure the fields are not undefined before calling toLowerCase()
     const matchesSearchTerm =
       (report.name && report.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (report.location && report.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -135,16 +128,15 @@ export default function MIncidentReport() {
 
   const handleStatusFilter = (status) => {
     setSelectedStatus(status);
-    setShowFilterMenu(false); // Close the filter menu after selecting
+    setShowFilterMenu(false); 
   };
 
   const handleSort = () => {
-    // Implement sorting logic here
     const sortedReports = [...incidentReports].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
     setIncidentReports(sortedReports);
   };
 
-  const [showFullDetails, setShowFullDetails] = useState({}); // Store visibility state for each report's details
+  const [showFullDetails, setShowFullDetails] = useState({});
 
   const toggleDetails = (index) => {
     setShowFullDetails((prevState) => ({
@@ -208,14 +200,14 @@ export default function MIncidentReport() {
               placeholder="Search"
               className={`border-0 p-1 rounded-lg flex-grow focus:outline-none focus:ring focus:ring-gray-200 text-sm ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-gray-100'}`}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} // Update search term
+              onChange={(e) => setSearchTerm(e.target.value)} 
             />
           </div>
           <div className="flex items-center space-x-2 relative">
             <FaBell className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" onClick={() => navigate('/mNotification')} />
             <FaUserCircle 
                 className="w-5 h-5 text-white hover:text-yellow-400 cursor-pointer" 
-                onClick={() => navigate('/mprofile')} // Navigate to profile on click
+                onClick={() => navigate('/mprofile')} 
             />
             <div className="relative">
               <FaCog 
@@ -244,7 +236,7 @@ export default function MIncidentReport() {
                      <div className="relative">
                        <button 
                          className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
-                         onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
+                         onClick={() => setShowFilterMenu(!showFilterMenu)}
                        >
                          <FaSort className="mr-2" /> Sort/Filter
                        </button>

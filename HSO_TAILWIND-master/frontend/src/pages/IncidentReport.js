@@ -16,18 +16,11 @@ export default function IncidentReport() {
   const modalRef = useRef(null);
   const filterMenuRef = useRef(null);
   const [subject, setSubject] = useState("");
-  
-  
-
-  // State for search term and selected status
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("All"); // Default is All
-
-  // State for incident reports
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [incidentReports, setIncidentReports] = useState([]);
 
   useEffect(() => {
-    // Fetch incident reports from Supabase
     const fetchReports = async () => {
       try {
         const { data, error } = await supabase
@@ -50,10 +43,10 @@ export default function IncidentReport() {
         setShowSettingsMenu(false);
       }
       if (modalRef.current && !modalRef.current.contains(event.target)) {
-        closeImageModal(); // Close modal if clicked outside
+        closeImageModal(); 
       }
       if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
-        setShowFilterMenu(false); // Close filter menu if clicked outside
+        setShowFilterMenu(false); 
       }
     };
 
@@ -70,9 +63,8 @@ export default function IncidentReport() {
   const handleImageClick = (image) => {
     setSelectedImage(image);
     setShowImageModal(true);
-};
+  };
 
-  // Close the modal when clicked outside
   const closeImageModal = () => {
       setShowImageModal(false);
       setSelectedImage(null);
@@ -89,22 +81,20 @@ export default function IncidentReport() {
     const selectedDepartment = incidentReports[index].selectedDepartment;
     const selectedReport = incidentReports[index];
 
-    if (selectedDepartment && subject.trim() !== "") { // Ensure subject is not empty
-      // Update the status, office, and subject locally
+    if (selectedDepartment && subject.trim() !== "") {
       const updatedReports = [...incidentReports];
       updatedReports[index].status = "Ongoing";
       updatedReports[index].office = selectedDepartment;
-      updatedReports[index].subject = subject; // Add subject here
+      updatedReports[index].subject = subject;
       setIncidentReports(updatedReports);
 
       try {
-        // Update the status, office, and subject in Supabase
         const { error } = await supabase
           .from('incidents')
           .update({
             status: 'Ongoing', 
             office: selectedDepartment, 
-            subject: subject, // Include subject in the update
+            subject: subject,
           })
           .eq('id', selectedReport.id);
 
@@ -121,7 +111,6 @@ export default function IncidentReport() {
   };
 
   const filteredReports = incidentReports.filter(report => {
-    // Ensure the fields are not undefined before calling toLowerCase()
     const matchesSearchTerm =
       (report.name && report.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (report.location && report.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -135,16 +124,15 @@ export default function IncidentReport() {
 
   const handleStatusFilter = (status) => {
     setSelectedStatus(status);
-    setShowFilterMenu(false); // Close the filter menu after selecting
+    setShowFilterMenu(false);
   };
 
   const handleSort = () => {
-    // Implement sorting logic here
     const sortedReports = [...incidentReports].sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
     setIncidentReports(sortedReports);
   };
 
-  const [showFullDetails, setShowFullDetails] = useState({}); // Store visibility state for each report's details
+  const [showFullDetails, setShowFullDetails] = useState({});
 
   const toggleDetails = (index) => {
     setShowFullDetails((prevState) => ({
@@ -154,11 +142,9 @@ export default function IncidentReport() {
   };
 
 
-// Function to handle Accept button click
 const handleAcceptReport = async (index) => {
   const updatedReport = { ...incidentReports[index], status: 'Ongoing' };
 
-  // Update the status in Supabase
   const { data, error } = await supabase
     .from('incidents')
     .update({ status: 'Ongoing' })
@@ -167,18 +153,15 @@ const handleAcceptReport = async (index) => {
   if (error) {
     console.error("Error updating report status:", error);
   } else {
-    // Update local state with the new report status
     const newReports = [...incidentReports];
     newReports[index] = updatedReport;
     setIncidentReports(newReports);
   }
 };
 
-// Function to handle Reject button click
 const handleRejectReport = async (index) => {
   const reportId = incidentReports[index].id;
 
-  // Delete the report from Supabase
   const { data, error } = await supabase
     .from('incidents')
     .delete()
@@ -187,7 +170,6 @@ const handleRejectReport = async (index) => {
   if (error) {
     console.error("Error deleting report:", error);
   } else {
-    // Remove the report from local state
     const newReports = incidentReports.filter((report) => report.id !== reportId);
     setIncidentReports(newReports);
   }
@@ -296,7 +278,7 @@ const handleRejectReport = async (index) => {
               <div className="relative">
                 <button 
                   className={`flex items-center ${theme === 'dark' ? 'bg-gray-600 text-white' : 'bg-gray-300 text-gray-700'} px-4 py-2 rounded shadow hover:bg-blue-200`}
-                  onClick={() => setShowFilterMenu(!showFilterMenu)} // Toggle filter menu
+                  onClick={() => setShowFilterMenu(!showFilterMenu)}
                 >
                   <FaSort className="mr-2" /> Sort/Filter
                 </button>
