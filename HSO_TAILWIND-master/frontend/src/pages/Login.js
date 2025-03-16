@@ -49,7 +49,7 @@ export default function Login() {
     e.preventDefault();
 
     const { data, error } = await supabase
-      .from('Account')
+      .from('account')
       .select('email')
       .eq('email', email)
       .single();
