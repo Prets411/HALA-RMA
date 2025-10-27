@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 
 export default function GIncidentReport() {
   const navigate = useNavigate();
-  const location = useLocation(); // Get the current location
+  const location = useLocation(); 
   const [isOpen, setIsOpen] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -17,21 +17,18 @@ export default function GIncidentReport() {
   const filterMenuRef = useRef(null);
   const [action_taken, setActionTaken] = useState("");
 
-  // State for search term and selected status
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("All"); // Default is All
+  const [selectedStatus, setSelectedStatus] = useState("All"); 
 
-  // State for incident reports
   const [incidentReports, setIncidentReports] = useState([]);
 
   useEffect(() => {
-    // Fetch incident reports from Supabase with filters
     const fetchReports = async () => {
       try {
         const { data, error } = await supabase
           .from('incidents')
           .select('*')
-          .eq('office', 'General Services Department'); // Only fetch reports for 'General Services Department'
+          .eq('office', 'General Services Department');
   
         if (error) throw error;
   
@@ -93,7 +90,7 @@ export default function GIncidentReport() {
       const updatedReports = [...incidentReports];
       updatedReports[index].status = "Ongoing";
       updatedReports[index].office = selectedDepartment;
-      updatedReports[index].action_taken = action_taken; // Add action_taken here
+      updatedReports[index].action_taken = action_taken; 
       setIncidentReports(updatedReports);
 
       try {
@@ -150,7 +147,6 @@ export default function GIncidentReport() {
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
-      {/* Sidebar */}
       <aside
         className={`shadow-md w-64 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
         style={{
@@ -192,9 +188,7 @@ export default function GIncidentReport() {
         </nav>
       </aside>
 
-      {/* Main content */}
       <main className={`flex-1 p-4 md:ml-64 flex flex-col ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-        {/* Search bar and user settings */}
         <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
           <div className="flex items-center">
             <FaSearch className="w-4 h-4 mr-1 text-white" />
@@ -232,7 +226,6 @@ export default function GIncidentReport() {
         </div>
 
 
-        {/* Incident reports */}
         <div className="mt-6">
                    <div className="flex justify-between items-center mb-4">
                      <h2 className="text-2xl font-bold">{theme === 'dark' ? 'Incident Reports' : <span className="text-maroon">Incident Reports</span>}</h2>
@@ -332,7 +325,6 @@ export default function GIncidentReport() {
           </div>
         </div>
 
-        {/* Modal for showing image */}
         {showImageModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`} ref={modalRef}>
