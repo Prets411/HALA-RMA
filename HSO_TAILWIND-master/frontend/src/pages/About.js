@@ -80,9 +80,7 @@ export default function AboutPage() {
         background: 'linear-gradient(120deg, #f9f9f9, #f0f0f0)',
         backgroundSize: '200% 200%',
         animation: 'gradientBackground 10s ease infinite',
-      }}
-    >
-      {/* Navbar */}
+      }}>
       <nav
         style={{
           backgroundColor: 'rgba(255, 255, 255)',
@@ -97,7 +95,6 @@ export default function AboutPage() {
         }}
       >
         <div className="container mx-auto flex justify-between items-center">
-          {/* Logo */}
           <div>
             <img
               src="/images/HALRMA.png"
@@ -113,7 +110,6 @@ export default function AboutPage() {
             />
           </div>
 
-          {/* Desktop Menu */}
           <div className="navbar-right hidden md:flex space-x-8">
             <Link
               to="/"
@@ -135,7 +131,6 @@ export default function AboutPage() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
@@ -153,7 +148,6 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden space-y-2 text-center bg-white p-4">
             <Link
@@ -181,9 +175,7 @@ export default function AboutPage() {
         )}
       </nav>
 
-      {/* Main Content */}
       <div className="flex flex-col items-center w-full max-w-6xl py-24 px-4">
-        {/* Intro Section */}
         <div className="text-center mb-10">
           <h1 className="text-3xl md:text-4xl font-bold text-maroon mb-2">About HALA!RMA</h1>
           <p className="text-black max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
@@ -193,9 +185,8 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* Grid Layout */}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {/* Features Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.2),rgba(255,255,255,0.5),rgba(0,191,255,0.2))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -219,7 +210,6 @@ export default function AboutPage() {
             )}
           </div>
 
-          {/* How It Works Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.2),rgba(255,255,255,0.5),rgba(0,191,255,0.2))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -244,7 +234,6 @@ export default function AboutPage() {
             )}
           </div>
 
-          {/* Significance Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.5),rgba(255,255,255,0.5),rgba(0,191,255,0.5))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -267,7 +256,6 @@ export default function AboutPage() {
             )}
           </div>
 
-          {/* Mission Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.5),rgba(255,255,255,0.5),rgba(0,191,255,0.5))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -290,7 +278,6 @@ export default function AboutPage() {
             )}
           </div>
 
-          {/* Contact Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.5),rgba(255,255,255,0.5),rgba(0,191,255,0.5))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -313,7 +300,6 @@ export default function AboutPage() {
             )}
           </div>
 
-          {/* New Team Section */}
           <div className="relative bg-white p-6 rounded-lg shadow-lg transition-transform hover:scale-105 hover:bg-[linear-gradient(120deg,rgba(173,216,230,0.5),rgba(255,255,255,0.5),rgba(0,191,255,0.5))] hover:bg-[length:200%_200%] hover:animate-[moveBackground_8s_linear_infinite]">
             <div className="relative z-10 flex justify-between items-center">
               <h2
@@ -342,7 +328,6 @@ export default function AboutPage() {
   );
 }
 
-// Helper function for nav link styles
 const navLinkStyle = (isActive) => ({
   color: isActive ? 'gold' : 'maroon',
   fontSize: '18px',
@@ -360,5 +345,3 @@ const navLinkStyle = (isActive) => ({
     color: 'gold',
   },
 });
-
-//
