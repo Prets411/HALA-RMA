@@ -7,7 +7,7 @@ export default function CreateAnnouncements() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [announcementTitle, setAnnouncementTitle] = useState(""); // State for announcement title
+  const [announcementTitle, setAnnouncementTitle] = useState(""); 
   const [announcement, setAnnouncement] = useState("");
   const [images, setImages] = useState([]);
   const [selectedColor, setSelectedColor] = useState("");
@@ -35,7 +35,7 @@ export default function CreateAnnouncements() {
 
   const handleImageChange = (event) => {
     const files = Array.from(event.target.files);
-    const validImages = files.filter(file => file.size <= 5 * 1024 * 1024 && file.type.startsWith('image/')); // Check size and type
+    const validImages = files.filter(file => file.size <= 5 * 1024 * 1024 && file.type.startsWith('image/'));
     if (validImages.length < files.length) {
       alert('Some files are invalid (either too large or not images).');
     }
@@ -47,7 +47,7 @@ export default function CreateAnnouncements() {
     setAnnouncement(event.target.value);
   };
 
-  const handleTitleChange = (event) => { // Handle title input change
+  const handleTitleChange = (event) => { 
     setAnnouncementTitle(event.target.value);
   };
 
@@ -62,9 +62,8 @@ export default function CreateAnnouncements() {
 
   const confirmPost = async () => {
     try {
-      // Call the function to insert announcement data
       const result = await postAnnouncement();
-      if (!result || result.error) {  // Check if result or result.error exists
+      if (!result || result.error) {
         alert(`Failed to post announcement: ${result ? result.error.message : 'Unknown error'}`);
       } else {
         alert('Announcement posted successfully!');
@@ -79,7 +78,6 @@ export default function CreateAnnouncements() {
   
   const postAnnouncement = async () => {
     try {
-      // Get the current user from Supabase
       const response = await supabase.auth.getUser();
   
       if (response.error) {
@@ -94,16 +92,14 @@ export default function CreateAnnouncements() {
         return { error: { message: 'User not authenticated.' } };
       }
   
-      // Upload Images to Supabase Bucket under "Announcements" folder
       const imageURLs = [];
       for (const image of images) {
         const fileExt = image.name.split('.').pop();
-        const filePath = `Announcements/${Date.now()}_${image.name}`; // Store in 'Announcements' folder
+        const filePath = `Announcements/${Date.now()}_${image.name}`; 
   
-        // Upload the image to the "IMAGES" bucket
         const { error: uploadError } = await supabase
           .storage
-          .from('IMAGES') // Correct bucket name
+          .from('IMAGES') 
           .upload(filePath, image);
   
         if (uploadError) {
@@ -111,10 +107,9 @@ export default function CreateAnnouncements() {
           return { error: uploadError };
         }
   
-        // Get the public URL of the uploaded image
         const { data } = supabase
           .storage
-          .from('IMAGES') // Correct bucket name
+          .from('IMAGES')
           .getPublicUrl(filePath);
   
         if (data) {
@@ -122,7 +117,6 @@ export default function CreateAnnouncements() {
         }
       }
   
-      // Insert data into 'announcements' table
       const { error: insertError } = await supabase
         .from('announcements')
         .insert([
@@ -131,7 +125,7 @@ export default function CreateAnnouncements() {
             content: announcement,
             created_by: user.id,
             color: selectedColor,
-            images: imageURLs.length > 0 ? imageURLs[0] : null, // Store the first image URL
+            images: imageURLs.length > 0 ? imageURLs[0] : null, 
             created_at: new Date().toISOString(),
           },
         ]);
@@ -172,7 +166,7 @@ export default function CreateAnnouncements() {
   };
 
   const resetForm = () => {
-    setAnnouncementTitle(""); // Reset title
+    setAnnouncementTitle("");
     setAnnouncement("");
     setImages([]);
     setSelectedColor("");
@@ -254,9 +248,7 @@ export default function CreateAnnouncements() {
         </nav>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 p-4 md:ml-64 flex flex-col">
-        {/* Search bar and user settings */}
         <div className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700 text-black-700' : 'bg-maroon text-white'} p-2 rounded-lg shadow mb-4`}>
           <div className="flex items-center">
             <FaSearch className="w-4 h-4 mr-1 text-white" />
@@ -291,7 +283,6 @@ export default function CreateAnnouncements() {
           </div>
         </div>
 
-        {/* Create Announcement Form */}
         <div className={`bg-gray-50 p-6 rounded-lg shadow-md border border-gray-500 flex-grow flex flex-col ${theme === 'dark' ? 'bg-gray-800 text-white' : ''}`} style={{ height: '500px', overflowY: 'auto' }}>
           <h2 className={`text-2xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-maroon'}`}>Create Announcement</h2>
           <form onSubmit={handleSubmit} className="space-y-4 flex-grow">
@@ -301,7 +292,7 @@ export default function CreateAnnouncements() {
                 type="text"
                 className={`border rounded-lg w-full p-2 text-sm border-gray-400 ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-white text-gray-700'}`}
                 value={announcementTitle}
-                onChange={handleTitleChange} // Handle title input change
+                onChange={handleTitleChange} 
                 required
               />
             </div>
@@ -328,7 +319,6 @@ export default function CreateAnnouncements() {
               </div>
             </div>
 
-            {/* Display uploaded images */}
             <div className="mt-4">
               {images.length > 0 && (
                 <div>
@@ -362,7 +352,7 @@ export default function CreateAnnouncements() {
                 </select>
               </div>
               <button 
-                className="mt-8 h-10 px-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-6 text-sm" // Adjust height only
+                className="mt-8 h-10 px-2 bg-blue-500 text-white rounded hover:bg-blue-600 ml-6 text-sm"
                 onClick={() => navigate('/color')} 
               >
                 View Color Legend
@@ -388,7 +378,6 @@ export default function CreateAnnouncements() {
           </form>
         </div>
 
-        {/* Cancel Confirmation Modal */}
         {showCancelConfirmation && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-4 rounded-lg">
@@ -401,7 +390,6 @@ export default function CreateAnnouncements() {
           </div>
         )}
 
-        {/* Post Confirmation Modal */}
         {showPostConfirmation && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white p-4 rounded-lg">
