@@ -5,24 +5,23 @@ import { supabase } from '../supabaseClient';
 
 const GProfile = () => {
   const navigate = useNavigate();
-  const [displayName, setDisplayName] = useState(''); // Initial state for display name
-  const [email, setEmail] = useState(''); // Initial state for email
+  const [displayName, setDisplayName] = useState(''); 
+  const [email, setEmail] = useState(''); 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [profilePicture, setProfilePicture] = useState(() => localStorage.getItem('profilePicture')); // Load from local storage
+  const [profilePicture, setProfilePicture] = useState(() => localStorage.getItem('profilePicture')); 
   const [preview, setPreview] = useState(profilePicture);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const settingsMenuRef = useRef(null); // Define the ref for the settings menu
+  const settingsMenuRef = useRef(null); 
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showModal, setShowModal] = useState(false); // State for modal visibility
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light'); // Theme state
+  const [showModal, setShowModal] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light'); 
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Get the authenticated user's email from Supabase auth
         const {
           data: { user },
           error: authError,
@@ -30,15 +29,14 @@ const GProfile = () => {
 
         if (authError || !user) {
           console.error('User not authenticated:', authError?.message);
-          navigate('/login'); // Redirect to login if user is not authenticated
+          navigate('/login'); 
           return;
         }
 
-        // Fetch user data from the Account table using email
         const { data, error } = await supabase
           .from('Account')
           .select('first_name, email')
-          .eq('email', user.email) // Match the email of the authenticated user
+          .eq('email', user.email)
           .single();
 
         if (error || !data) {
@@ -46,7 +44,6 @@ const GProfile = () => {
           return;
         }
 
-        // Update the display name and email
         setDisplayName(data.first_name || 'N/A');
         setEmail(data.email || 'N/A');
       } catch (error) {
@@ -87,12 +84,11 @@ const GProfile = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setShowModal(true); // Show the confirmation modal
+    setShowModal(true); 
   };
 
   const handleConfirmSave = async () => {
     try {
-      // Get the current authenticated user
       const {
         data: { user },
         error: authError,
@@ -103,15 +99,14 @@ const GProfile = () => {
         return;
       }
   
-      // Update the Account table with the new data
       const { error: updateError } = await supabase
         .from('Account')
         .update({
-          first_name: displayName,      // Update first_name field
-          email: email,                 // Update email field
-          image_url: profilePicture,    // Update image_url field with Base64 or file link
+          first_name: displayName,      
+          email: email,                 
+          image_url: profilePicture,   
         })
-        .eq('email', user.email); // Match the current user's email for the update
+        .eq('email', user.email); 
   
       if (updateError) {
         console.error('Error updating profile:', updateError.message);
@@ -119,9 +114,9 @@ const GProfile = () => {
         return;
       }
   
-      // Success feedback and close modal
+
       alert('Profile updated successfully!');
-      setShowModal(false); // Close the modal
+      setShowModal(false); 
       console.log('Updated values:', { displayName, email, profilePicture });
     } catch (error) {
       console.error('Error saving changes:', error.message);
@@ -132,24 +127,23 @@ const GProfile = () => {
   
 
   const handleCancelSave = () => {
-    setShowModal(false); // Close the modal without saving
+    setShowModal(false); 
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('userToken'); // Adjust as necessary for your auth method
-    navigate('/login'); // Redirect to login page
+    localStorage.removeItem('userToken');
+    navigate('/login'); 
   };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme); // Update the attribute in the HTML
+    document.documentElement.setAttribute('data-theme', newTheme); 
   };
 
   return (
     <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-black'} overflow-hidden`}>
-      {/* Sidebar */}
       <aside
         className={`shadow-md w-64 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
         style={{
@@ -190,10 +184,8 @@ const GProfile = () => {
         </nav>
       </aside>
 
-      {/* Main content */}
       <main className="flex-1 p-4 md:ml-64 flex flex-col">
-        <div className="flex-1 flex flex-col"> {/* Ensure this container can grow */}
-          {/* Search bar and user settings */}
+        <div className="flex-1 flex flex-col"> 
           <div className={`flex justify-between items-center p-2 rounded-lg shadow mb-4 ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'}`}>
             <div className="flex items-center">
               <FaSearch className="w-4 h-4 mr-1 text-white" />
@@ -202,7 +194,7 @@ const GProfile = () => {
                 placeholder="Search"
                 className="bg-gray-100 border-0 p-1 rounded-lg flex-grow focus:outline-none focus:ring focus:ring-gray-200 text-sm"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)} // Update search term
+                onChange={(e) => setSearchTerm(e.target.value)} 
               />
             </div>
             <div className="flex items-center space-x-2 relative">
@@ -224,23 +216,20 @@ const GProfile = () => {
             </div>
           </div>
 
-          {/* Profile Settings Form */}
           <div className={`flex-grow p-6 border border-black rounded-lg shadow-md overflow-y-auto ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'} text-black`}>
             <h1 className={`text-2xl font-semibold mb-4 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Information Display</h1>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Profile Picture Section */}
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   {preview ? (
                     <img
                       src={preview}
                       alt="Profile Preview"
-                      className="w-24 h-24 rounded-full border border-black object-cover" // Change border color to black
+                      className="w-24 h-24 rounded-full border border-black object-cover" 
                     />
                   ) : (
                     <FaUserCircle className="w-24 h-24 text-gray-300" />
                   )}
-                  {/* Edit Icon */}
                   <label htmlFor="profile-picture" className="absolute bottom-0 right-0 bg-gray-700 rounded-full p-1 cursor-pointer">
                     <FaEdit className="text-white w-5 h-5" />
                   </label>
@@ -261,7 +250,6 @@ const GProfile = () => {
                 </div>
               </div>
 
-              {/* Display Name Section */}
               <div>
                 <label className="block text-gray-400 mb-1" htmlFor="display-name">Display Name</label>
                 <input
@@ -273,7 +261,6 @@ const GProfile = () => {
                 />
               </div>
 
-              {/* Email Section */}
               <div>
                 <label className="block text-gray-400 mb-1" htmlFor="email">Email</label>
                 <input
@@ -285,8 +272,6 @@ const GProfile = () => {
                 />
               </div>
 
-
-              {/* Save Button */}
               <button type="submit" className={`mt-4 px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-700 text-white' : 'bg-maroon text-white'}`}>
                 Save Changes
               </button>
@@ -295,7 +280,6 @@ const GProfile = () => {
         </div>
       </main>
 
-      {/* Confirmation Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-md w-1/3">
