@@ -207,7 +207,6 @@ export default function Dashboard() {
     return text.includes(searchTerm.toLowerCase()) || details.includes(searchTerm.toLowerCase());
   });
 
-  // Fetch the total user types
   const fetchUserTypes = async () => {
     try {
       const { data, error } = await supabase.from("account").select("user_type");
@@ -226,15 +225,13 @@ export default function Dashboard() {
   
       if (error) throw error;
   
-      // Aggregate data by status and month
       const monthlyCounts = processMonthlyData(data);
   
-      // Set state for summary numbers
       setResolvedReports(monthlyCounts.resolved.reduce((a, b) => a + b, 0));
       setPendingReports(monthlyCounts.pending.reduce((a, b) => a + b, 0));
       setOpenReports(monthlyCounts.open.reduce((a, b) => a + b, 0));
   
-      // Prepare data for the chart
+
       prepareChartData(monthlyCounts);
     } catch (error) {
       console.error("Error fetching incidents:", error.message);
@@ -243,13 +240,12 @@ export default function Dashboard() {
 
   
   const processMonthlyData = (data) => {
-    // Initialize empty arrays for each status across 12 months
     const resolved = Array(12).fill(0);
     const pending = Array(12).fill(0);
     const open = Array(12).fill(0);
   
     data.forEach((incident) => {
-      const month = new Date(incident.created_at).getMonth(); // 0-indexed months
+      const month = new Date(incident.created_at).getMonth();
   
       if (incident.status === "Resolved") resolved[month]++;
       if (incident.status === "Ongoing") pending[month]++;
@@ -319,30 +315,23 @@ export default function Dashboard() {
     const [currentAnnouncementPage, setCurrentAnnouncementPage] = useState(1);
     const announcementsPerPage = 8;
     
-    // Add pagination states for programs
     const [currentProgramPage, setCurrentProgramPage] = useState(1);
     const programsPerPage = 8;
     
-
-
-    // Get paginated announcements
     const paginatedAnnouncements = filteredAnnouncements.slice(
       (currentAnnouncementPage - 1) * announcementsPerPage,
       currentAnnouncementPage * announcementsPerPage
     );
 
-    // Get paginated programs
     const paginatedPrograms = filteredPrograms.slice(
       (currentProgramPage - 1) * programsPerPage,
       currentProgramPage * programsPerPage
     );
 
-    // Pagination controls for announcements
     const handleAnnouncementPageChange = (page) => {
       setCurrentAnnouncementPage(page);
     };
 
-    // Pagination controls for programs
     const handleProgramPageChange = (page) => {
       setCurrentProgramPage(page);
     };
@@ -473,7 +462,6 @@ export default function Dashboard() {
 
         <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-left `}>Analytics</h3>
         <br></br>
-        {/* User and Reports Summary */}
         <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-100 p-4 rounded-lg shadow">
             <h3 className="text-lg font-semibold">Total Active Users</h3>
@@ -492,7 +480,6 @@ export default function Dashboard() {
             <p className="text-2xl">{resolvedReports}</p>
             </div>
 
-            {/* Monthly Reports Section */}
             <div className="monthly-reports-section">
               {monthlyReportsData && monthlyReportsData.datasets && (
                 <Line 
@@ -511,7 +498,6 @@ export default function Dashboard() {
             </div>
         </div>
 
-        {/* Announcements Card Container */}
         <div className="flex justify-between items-center">
           <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Announcements</h3>
           <select className={`border rounded p-1 ${
@@ -530,7 +516,6 @@ export default function Dashboard() {
           </select>
         </div>
 
-        {/* Display paginated announcements */}
         <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
           {paginatedAnnouncements.length === 0 ? (
             <div className="text-center text-gray-500">No announcements found</div>
@@ -547,13 +532,12 @@ export default function Dashboard() {
                   alt={announcement.title}
                   onError={(e) => {
                     e.target.src = 'https://via.placeholder.com/150';
-                  }} // Fallback image
+                  }} 
                   className="h-24 w-full object-cover mb-2 rounded-lg"
                 />
               ) : (
                 <p className="text-gray-500 text-sm">No image available</p>
               )}
-              {/* Truncated Title */}
               <h4
                 className="font-semibold text-sm"
                 style={{
@@ -577,7 +561,6 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Pagination for Announcements */}
         <div className="flex justify-center mt-4">
         {Array(Math.ceil(filteredAnnouncements.length / announcementsPerPage))
           .fill()
@@ -586,8 +569,8 @@ export default function Dashboard() {
               key={i}
               className={`mx-1 px-2 py-1 rounded ${
                 currentAnnouncementPage === i + 1
-                  ? 'bg-maroon text-white' // Selected page styles
-                  : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' // Default styles with hover effect
+                  ? 'bg-maroon text-white'
+                  : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' 
               }`}
               onClick={() => setCurrentAnnouncementPage(i + 1)}
             >
@@ -600,10 +583,8 @@ export default function Dashboard() {
             <br/>
               <hr/>
             <br/>
-          {/* Programs Card Container */}
           <div className="flex justify-between items-center">
             <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-center`}>Programs</h3>
-            {/* Programs Sorting Dropdown */}
             <select
               className={`border rounded p-1 ${
                 theme === 'dark' 
@@ -611,7 +592,7 @@ export default function Dashboard() {
               : 'bg-white text-black border-gray-300'
               }`}
               value={programFilter}
-              onChange={(e) => setProgramFilter(e.target.value)} // Ensure state updates correctly
+              onChange={(e) => setProgramFilter(e.target.value)} 
             >
               <option value="all">All</option>
               <option value="oldest">Oldest</option>
@@ -619,7 +600,6 @@ export default function Dashboard() {
             </select>
           </div>
 
-          {/* Display paginated programs */}
           <div className="flex flex-wrap justify-between mt-2 overflow-y-auto" style={{ maxHeight: '250px' }}>
             {paginatedPrograms.length === 0 ? (
               <div className="text-center text-gray-500">No programs found</div>
@@ -649,7 +629,6 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-sm">No image available</p>
                 )}
               
-                {/* Truncated Title */}
                 <h4
                   className="font-semibold text-sm"
                   style={{
@@ -661,7 +640,6 @@ export default function Dashboard() {
                   {program.who}
                 </h4>
               
-                {/* Show More Button with Space */}
                 <button
                   className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
                   onClick={() => handleShowMoreProgram(program)}
@@ -673,7 +651,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Pagination for Programs */}
           <div className="flex justify-center mt-4">
           {Array(Math.ceil(filteredPrograms.length / programsPerPage))
             .fill()
@@ -682,8 +659,8 @@ export default function Dashboard() {
                 key={i}
                 className={`mx-1 px-2 py-1 rounded ${
                   currentProgramPage === i + 1
-                    ? 'bg-maroon text-white' // Selected page styles
-                    : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' // Default styles with hover effect
+                    ? 'bg-maroon text-white' 
+                    : 'bg-gray-200 text-black hover:bg-maroon hover:text-white transition-all' 
                 }`}
                 onClick={() => setCurrentProgramPage(i + 1)}
               >
@@ -701,13 +678,12 @@ export default function Dashboard() {
               <img
                 src={Array.isArray(selectedAnnouncement.images) ? selectedAnnouncement.images[0] : selectedAnnouncement.images}
                 alt={selectedAnnouncement.title}
-                onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }} // Fallback image
+                onError={(e) => { e.target.src = 'https://via.placeholder.com/150'; }} 
                 className="h-48 w-full object-cover mb-2"
               />
-              {/* Updated Title Styling */}
               <h2
                 className="text-lg font-bold"
-                style={{ color: 'black' }} // Inline style to override theme-based styles
+                style={{ color: 'black' }} 
               >
                 {selectedAnnouncement.title}
               </h2>
@@ -723,7 +699,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Modal for Programs */}
         {programsModalVisible && selectedProgram && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg p-4 max-w-lg w-full">
@@ -738,21 +713,19 @@ export default function Dashboard() {
                   }
                   alt={selectedProgram.who}
                   onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/150'; // Fallback image
+                    e.target.src = 'https://via.placeholder.com/150'; 
                   }}
                   className="h-48 w-full object-cover mb-2 rounded-lg"
                 />
               ) : (
                 <p className="text-gray-500 text-sm">No image available</p>
               )}
-              {/* Program Details */}
               <h2 className="text-lg font-bold" style={{ color: 'black' }}>
               {selectedProgram.who}
               </h2>
               <p className="text-black">{selectedProgram.what}</p>
               <p className="text-gray-500 text-xs">When: {selectedProgram.when_date} at {selectedProgram.when_time}</p>
               <p className="text-gray-500 text-xs">Where: {selectedProgram.where}</p>
-              {/* Close Button */}
               <button
                 className={`w-full bg-maroon text-white py-2 px-4 rounded-md hover:bg-yellow-500 hover:text-white transition-all mt-4`}
                 onClick={closeProgramModal}
