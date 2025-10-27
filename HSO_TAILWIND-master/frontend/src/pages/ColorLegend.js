@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const ColorLegend = () => {
     const navigate = useNavigate();
-    const location = useLocation(); // Get the current location
+    const location = useLocation(); 
     const [menuActive, setMenuActive] = useState(false);
     const [showSettingsMenu, setShowSettingsMenu] = useState(false);
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -48,11 +48,9 @@ const ColorLegend = () => {
     };
 
     const handleLogout = () => {
-        // Log out logic (e.g., clear tokens, redirect)
-        window.location.href = "/"; // Adjust the path if necessary
+        window.location.href = "/"; 
     };
 
-    // Close the settings menu if the user clicks outside of it
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target)) {
@@ -68,7 +66,6 @@ const ColorLegend = () => {
 
     return (
         <div className={`flex min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-100'} overflow-hidden`}>
-            {/* Sidebar */}
             <aside
                 className={`shadow-md w-64 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ${menuActive ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
                 style={{
@@ -120,9 +117,7 @@ const ColorLegend = () => {
                 </nav>
             </aside>
 
-            {/* Main content */}
             <main className="flex-1 p-4 md:ml-64 flex flex-col">
-                {/* Navbar */}
                 <nav className={`flex justify-between items-center ${theme === 'dark' ? 'bg-gray-700' : 'bg-maroon'} p-2 rounded-lg shadow mb-4`}>
                     <div className="flex items-center">
                         <FaSearch className="w-4 h-4 mr-1 text-white" />
@@ -157,14 +152,12 @@ const ColorLegend = () => {
                     </div>
                 </nav>
 
-                {/* Color Legend Section */}
                 <div className={`flex-grow rounded-lg p-2 shadow flex-grow flex flex-col items-center mb-2 border-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border-gray-300`}>
                     <h2 className={`text-2xl font-bold text-center ${theme === 'dark' ? 'text-white' : 'text-maroon'} mb-2 w-full`}>COLOR LEGEND</h2>
                     <p className={`text-center ${theme === 'dark' ? 'text-gray-400' : 'text-black'}`}>List of colors and their corresponding meanings</p>
                 </div>
 
                 <div className={`flex-grow rounded-lg p-4 shadow flex flex-col md:flex-row items-center border-2 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} border-gray-300`}>
-                    {/* Color Wheel Container */}
                     <div className="color-wheel-container flex justify-center items-center w-full md:w-1/2 mb-4 md:mb-0">
                         <svg viewBox="0 0 32 32" className="color-wheel animate-rotate" style={{ width: '280px', height: '280px' }}>
                             <g>
@@ -176,8 +169,7 @@ const ColorLegend = () => {
                             </g>
                         </svg>
                     </div>
-
-                    {/* Legend details */}
+                                
                     <div className="legend-container flex flex-col justify-center items-center md:w-1/2">
                         {colors.map((color) => (
                             <div key={color.name} className={`legend-item flex justify-between p-4 m-2 rounded-lg shadow hover:shadow-lg transition-shadow duration-200 w-full border-2 ${theme === 'dark' ? 'border-blue-600' : 'border-blue-200'} hover:border-blue-500`}>
@@ -213,5 +205,3 @@ const ColorLegend = () => {
 };
 
 export default ColorLegend;
-
-//
