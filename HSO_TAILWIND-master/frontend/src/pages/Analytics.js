@@ -93,27 +93,27 @@ const Analytics = () => {
           setPendingReports(pending);
           setOpenReports(open);
     
-          // Process data for monthly reports
+
           const monthlyCounts = processMonthlyData(data);
-          setMonthlyReportCounts(monthlyCounts);  // Update the monthly report counts
+          setMonthlyReportCounts(monthlyCounts); 
     
-          // Update Chart Data
+
           prepareChartData(resolved, pending, open, monthlyCounts);
         } catch (error) {
           console.error("Error fetching incidents:", error.message);
         }
       };
     
-      // Function to process the monthly data
+
       const processMonthlyData = (data) => {
-        const monthlyCounts = Array(12).fill(0); // Initialize an array for each month (0-11)
+        const monthlyCounts = Array(12).fill(0); 
     
         data.forEach((incident) => {
-          const month = new Date(incident.created_at).getMonth(); // Get month from 'created_at'
-          monthlyCounts[month] += 1; // Increment count for that month
+          const month = new Date(incident.created_at).getMonth();
+          monthlyCounts[month] += 1;
         });
     
-        return monthlyCounts; // Returns an array with counts for each month
+        return monthlyCounts;
       };
             
         const prepareChartData = (resolved, pending, open, monthlyCounts) => {
@@ -122,7 +122,7 @@ const Analytics = () => {
               datasets: [
                 {
                   label: "Reports",
-                  data: [1, 3, resolved + pending + open],  // Example for reports timeline
+                  data: [1, 3, resolved + pending + open], 
                   backgroundColor: "rgba(75,192,192,0.4)",
                   borderColor: "rgba(75,192,192,1)",
                 },
@@ -137,7 +137,7 @@ const Analytics = () => {
           datasets: [
             {
                 label: "Monthly Reports",
-                data: monthlyCounts, // Use the monthlyCounts data
+                data: monthlyCounts,
                 backgroundColor: "rgba(75, 192, 192, 0.5)",
             },
             {
@@ -284,7 +284,6 @@ const Analytics = () => {
         
         <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-maroon'} text-left `}>Analytics</h3>
         <br></br>
-        {/* User and Reports Summary */}
         <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-100 p-4 rounded-lg shadow">
             <h3 className="text-lg font-semibold">Total Users</h3>
@@ -303,7 +302,6 @@ const Analytics = () => {
             <p className="text-2xl">{resolvedReports}</p>
             </div>
         </div>
-        {/* Bar Chart for Monthly Reports */}
         {monthlyReportsData ? (
           <div className="bg-white p-6 rounded-lg shadow mb-6">
             <h3 className="text-xl font-semibold mb-4">Monthly Reports</h3>
